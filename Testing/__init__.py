@@ -1,1 +1,1 @@
-from SDECv2.SerialController import SerialSentry, SerialObj, Comport
+from SerialController import SerialSentry, SerialObj, Comport

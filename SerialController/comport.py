@@ -1,22 +1,27 @@
+import serial
+
 from enum import Enum
 
-class OPEN(Enum): pass
-class CLOSED(Enum): pass
+class Status(Enum):
+    CLOSED = 0
+    OPEN = 1
 
 class Comport:
-    def __init__(self):
-        self.name = "Comport-One"
-        self.status = CLOSED
+    def __init__(self, name, baudrate, timeout):
+        self.name = name
+        self.status = Status.CLOSED
+        self.baudrate = baudrate
+        self.timeout = timeout
 
     def open(self) -> bool:
-        if self.status is CLOSED:
-            self.status = OPEN
+        if self.status is Status.CLOSED:
+            self.status = Status.OPEN
             return True
         else: return False
 
     def close(self) -> bool:
-        if self.status is OPEN:
-            self.status = CLOSED
+        if self.status is Status.OPEN:
+            self.status = Status.CLOSED
             return True
         else:
             return False
@@ -24,8 +29,10 @@ class Comport:
     def __str__(self):
         return (
             "Comport:{" +
-            "Name: {}".format(self.name) + " "
-            "Status: {}}}".format(self.status)
+            "Name: {}".format(self.name) +
+            "Status: {}".format(self.status) +
+            "Baudrate: {}".format(self.baudrate) +
+            "Timeout: {}}}".format(self.timeout)
         )
     
     def __repr__(self):
