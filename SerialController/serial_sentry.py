@@ -19,10 +19,10 @@ class SerialSentry:
 
         self.changed_serial_objs: List[ChangedSerialObj] = []
 
-    def open_serial(self) -> SerialObj:
+    def open_serial(self, name, baudrate, timeout) -> SerialObj:
         new_serial_connection = SerialObj()
 
-        new_serial_connection.init_comport("COM3", 9600, 1)
+        new_serial_connection.init_comport(name, baudrate, timeout)
 
         new_serial_connection.open_comport()
 
