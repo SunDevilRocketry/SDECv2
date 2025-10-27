@@ -30,9 +30,9 @@ class Comport:
         return (
             "Comport:{" +
             "Name: {}".format(self.name) +
-            "Status: {}".format(self.status) +
-            "Baudrate: {}".format(self.baudrate) +
-            "Timeout: {}}}".format(self.timeout)
+            " Status: {}".format(self.status) +
+            " Baudrate: {}".format(self.baudrate) +
+            " Timeout: {}}}".format(self.timeout)
         )
     
     def __repr__(self):
