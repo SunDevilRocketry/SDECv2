@@ -5,13 +5,18 @@ from .serial_controller import SerialObj
 from dataclasses import dataclass
 from time import sleep
 from threading import Thread
-from typing import List
+from typing import List, Dict
+
+@dataclass
+class SnapshotSerialObj:
+    comport_status: Status
+    name: str
 
 @dataclass
 class ChangedSerialObj:
     time_changed: int
-    initial_serial_obj: SerialObj
-    new_serial_obj: SerialObj
+    initial_snapshot: SnapshotSerialObj
+    new_snapshot: SnapshotSerialObj
 
 class SerialSentry:
     def __init__(self):
@@ -19,7 +24,7 @@ class SerialSentry:
 
         self.changed_serial_objs: List[ChangedSerialObj] = []
 
-    def open_serial(self, name, baudrate, timeout) -> SerialObj:
+    def open_serial(self, name: str, baudrate: int, timeout: int) -> SerialObj:
         new_serial_connection = SerialObj()
 
         new_serial_connection.init_comport(name, baudrate, timeout)
@@ -38,13 +43,22 @@ class SerialSentry:
         else:
             return False
         
-    def monitor_serial_objs_thread(self, time) -> None:
+    def snapshot_serial_objs(self) -> List[SnapshotSerialObj]:
+        snapshots = []
+        for serial_obj in self.serial_objs:
+            snapshots.append(SnapshotSerialObj(
+                comport_status=serial_obj.comport.status,
+                name=serial_obj.comport.name
+            ))
+        return snapshots
+        
+    def monitor_serial_objs_thread(self, time: int) -> None:
         curr_time = 0
-        initial_serial_objs = copy.deepcopy(self.serial_objs)
+        initial_serial_objs = self.snapshot_serial_objs()
         changed_serial_objs = []
 
         while curr_time < time:
-            curr_serial_objs = copy.deepcopy(self.serial_objs)
+            curr_serial_objs = self.snapshot_serial_objs()
 
             for initial_serial_obj, curr_serial_obj in zip(initial_serial_objs, curr_serial_objs):
                 print("Initial Comport: {}".format(initial_serial_obj))
@@ -53,11 +67,11 @@ class SerialSentry:
                     print("Found difference")
                     serial_obj_report = ChangedSerialObj(
                         time_changed=curr_time,
-                        initial_serial_obj=initial_serial_obj,
-                        new_serial_obj=curr_serial_obj
+                        initial_snapshot=initial_serial_obj,
+                        new_snapshot=curr_serial_obj
                     )
                     changed_serial_objs.append(serial_obj_report)
-                    initial_serial_objs = copy.deepcopy(self.serial_objs)
+                    initial_serial_objs = self.snapshot_serial_objs()
 
             print("Current changed_serial_objs:")
             print(changed_serial_objs)
