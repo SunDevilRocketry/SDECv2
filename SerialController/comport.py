@@ -7,7 +7,7 @@ class Status(Enum):
     OPEN = 1
 
 class Comport:
-    def __init__(self, name, baudrate, timeout):
+    def __init__(self, name: str, baudrate: int, timeout: int):
         self.name = name
         self.status = Status.CLOSED
         self.baudrate = baudrate

@@ -7,7 +7,7 @@ class SerialObj:
         self.comport: Comport
         self.serialObj = serial.Serial()
     
-    def init_comport(self, name, baudrate, timeout) -> Comport:
+    def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
         self.comport = Comport(name, baudrate, timeout)
         self.serialObj.port = name
         self.serialObj.baudrate = baudrate
@@ -55,7 +55,7 @@ class SerialObj:
             print(f"Error: {e}")
             return b""
     
-    def read_bytes(self, num_bytes) -> bytearray:
+    def read_bytes(self, num_bytes: int) -> bytearray:
         try:
             read_bytes = []
             for _ in range(num_bytes): 

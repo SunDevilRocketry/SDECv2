@@ -19,7 +19,7 @@ class SerialSentry:
 
         self.changed_serial_objs: List[ChangedSerialObj] = []
 
-    def open_serial(self, name, baudrate, timeout) -> SerialObj:
+    def open_serial(self, name: str, baudrate: int, timeout: int) -> SerialObj:
         new_serial_connection = SerialObj()
 
         new_serial_connection.init_comport(name, baudrate, timeout)
@@ -38,7 +38,7 @@ class SerialSentry:
         else:
             return False
         
-    def monitor_serial_objs_thread(self, time) -> None:
+    def monitor_serial_objs_thread(self, time: int) -> None:
         curr_time = 0
         initial_serial_objs = copy.deepcopy(self.serial_objs)
         changed_serial_objs = []
