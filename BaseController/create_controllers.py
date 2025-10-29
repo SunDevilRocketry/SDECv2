@@ -1,4 +1,5 @@
-from BaseController import *
+from .controller import Controller
+from .sensor import Sensor
 
 def flight_computer_rev2_controller() -> Controller:
     poll_codes = {

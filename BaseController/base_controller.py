@@ -1,17 +1,17 @@
-import create_controllers
-
-from BaseController import *
-from typing import List
+from .controller import Controller
+from .firmware import Firmware
+from .sensor import Sensor
+from typing import List, Callable
 
 class BaseController:
-    def __init__(self):
-        self.controller: Controller
-        self.firmware: Firmware
+    def __init__(self, controller_func: Callable[[], Controller], firmware: Firmware):
+        self.controller: Controller = controller_func()
+        self.firmware: Firmware = firmware
 
-        self.controller = create_controllers.flight_computer_rev2_controller()
-        self.firmware = Firmware(
-            id=b"\x06",
-            name="APPA",
-            preset_frame_size=0,
-            preset_file=""
+    def __str__(self):
+        return (
+            "Base Controller:{" + 
+            "\n{}".format(self.firmware) +
+            "\n{}".format(self.controller) +
+            "\n}"
         )
