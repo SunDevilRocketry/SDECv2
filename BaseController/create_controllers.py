@@ -2,6 +2,7 @@ from .controller import Controller
 from .sensor import Sensor
 
 def flight_computer_rev2_controller() -> Controller:
+    # TODO: update when new state estimations for yaw created
     poll_codes = {
         b'\x00': Sensor("accX", "Accelerometer X", 2, int, "m/s/s"),
         b'\x01': Sensor("accY", "Accelerometer Y", 2, int, "m/s/s"),
@@ -9,10 +10,10 @@ def flight_computer_rev2_controller() -> Controller:
         b'\x03': Sensor("gyroX", "Gyroscope X", 2, int, "deg/s"),
         b'\x04': Sensor("gyroY", "Gyroscope Y", 2, int, "deg/s"),
         b'\x05': Sensor("gyroZ", "Gyroscope Z", 2, int, "deg/s"),
-        b'\x06': Sensor("magX", "Magnetometer X", 2, int, "µT"),
-        b'\x07': Sensor("magY", "Magnetometer Y", 2, int, "µT"),
-        b'\x08': Sensor("magZ", "Magnetometer Z", 2, int, "µT"),
-        b'\x09': Sensor("imut", "IMU Die Temperature", 2, int, "°C"),
+        b'\x06': Sensor("magX", "Magnetometer X", 2, int, ""),
+        b'\x07': Sensor("magY", "Magnetometer Y", 2, int, ""),
+        b'\x08': Sensor("magZ", "Magnetometer Z", 2, int, ""),
+        b'\x09': Sensor("imut", "IMU Die Temperature", 2, int, "deg C"), # Unused
 
         b'\x0A': Sensor("accXconv", "Pre-converted Accel X", 4, float, "m/s/s"),
         b'\x0B': Sensor("accYconv", "Pre-converted Accel Y", 4, float, "m/s/s"),
