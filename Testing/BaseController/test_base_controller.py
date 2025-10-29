@@ -15,7 +15,7 @@ def test_base_controller():
 
     print(appa_fc_rev2_base_controller)
 
-    #print(appa_fc_rev2_base_controller.controller.get_formatted_poll_codes())
+    print(appa_fc_rev2_base_controller.controller.get_formatted_poll_codes())
 
 if __name__ == "__main__":
     test_base_controller()

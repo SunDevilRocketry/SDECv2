@@ -20,9 +20,12 @@ class Controller:
             "\n}"
         )
     
+    def raw_bytes_repr(self, byte: bytes) -> str:
+        return "b'" + "".join(f"\\x{b:02x}" for b in byte) + "'"
+        
     def get_formatted_poll_codes(self):
         to_return = []
         for byte, sensor in self.poll_codes.items():
-            to_return += "{} : {}".format(byte, sensor)
+            to_return.append("{} : {}".format(self.raw_bytes_repr(byte), sensor))
         
         return "\n".join(to_return)

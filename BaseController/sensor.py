@@ -12,9 +12,9 @@ class Sensor:
         return (
             "Sensor:{" +
             "\n Short Name: {}".format(self.short_name) +
-            "\b Name: {}".format(self.name) + 
-            "\b Size: {}".format(self.size) + 
-            "\b Data Type: {}".format(self.data_type) +
-            "\b Units: {}".format(self.units) +
+            "\n Name: {}".format(self.name) + 
+            "\n Size: {}".format(self.size) + 
+            "\n Data Type: {}".format(self.data_type) +
+            "\n Units: {}".format(self.units) +
             "\n}"
         )
