@@ -66,6 +66,7 @@ class SerialSentry:
                 
                 print("Initial Comport: {}".format(initial_serial_obj))
                 print("Current Comport: {}".format(curr_serial_obj))
+                
                 if initial_serial_obj != curr_serial_obj:
                     serial_obj_report = ChangedSerialObj(
                         time_changed=curr_time,
@@ -74,6 +75,7 @@ class SerialSentry:
                     )
                     print("Found difference:")
                     print(serial_obj_report)
+
                     changed_serial_objs.append(serial_obj_report)
                     initial_serial_objs = self.snapshot_serial_objs()
 
@@ -94,8 +96,9 @@ class SerialSentry:
         
     def __str__(self):
         return (
-            "Serial Sentry: " +
-            "Serial Controllers: {}".format(self.serial_objs)
+            "Serial Sentry:{" +
+            "\n{}".format(self.serial_objs) +
+            "\n}"
         )
     
     def __repr__(self):

@@ -5,9 +5,9 @@ from .comport import Comport, Status
 class SerialObj:
     def __init__(self):
         self.comport: Comport
-        self.serialObj = serial.Serial()
+        self.serialObj: serial.Serial = serial.Serial()
     
-    def init_comport(self, name, baudrate, timeout) -> Comport:
+    def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
         self.comport = Comport(name, baudrate, timeout)
         self.serialObj.port = name
         self.serialObj.baudrate = baudrate
@@ -69,7 +69,8 @@ class SerialObj:
     def __str__(self):
         return (
                 "SerialController:{" +
-                "{}".format(self.comport) + " "
+                "\n{}".format(self.comport) +
+                "\n}"
             )
     
     def __repr__(self):
