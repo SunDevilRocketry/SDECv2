@@ -1,17 +1,19 @@
 from typing import Callable
 
 class Sensor:
-    def __init__( self, name: str, unit: str, convert_data: Callable[[float], float,], low_byte_range : int, upp_byte_range : int) :
+    #changes: added offset, size, opcode to init
+    def __init__( self, name: str, unit: str, convert_data: Callable[[float], float,], offset : int, size : int, opcode : bytes) :
         self.name = name
         self.unit = unit
         self.convert_data = convert_data
-        self.low_byte_range = low_byte_range
-        self.upp_byte_range = upp_byte_range
+        self.offset = offset
+        self.size = size
+        self.opcode = opcode
     
     def convert_data( self ) -> float:
         return self.conv_data
-        
-    def data_dump( self, opcode, subcommand ) -> float:
+        #refactor serial obj 
+    def data_dump( self, subcommand, serialObj ) -> float:
         # TODO:
         #check appa.py for list of sensors, substring for dump
         #check hardwarecommand lines 341, 571,
@@ -21,15 +23,15 @@ class Sensor:
         #opcode = b'\x03'
         
         #send command opcode
-        serialObj.sendByte( opcode )
+        serialObj.send_byte( self.opcode )
         
         #send sensor dump subcommand code b'\x01' for all sensors
-        serialObj.sendByte( subcommand )
+        serialObj.send_byte( subcommand )
         
         
         #toal byte size of sensors is 28 bytes
         #sensor_dump_size_bytes = 28
-        sensor_dump_size_bytes = serialObj.readByte()
+        sensor_dump_size_bytes = serialObj.read_byte()
         sensor_dump_size_bytes = int.from_bytes(sensor_dump_size_bytes, "big")
         
         #intiliaze array to hold sensor dump bytes
@@ -41,10 +43,10 @@ class Sensor:
         
         #append bytes to byte list
         for i in range(sensor_dump_size_bytes):
-            sensor_bytes_list.append( serialObj.readByte() )    
+            sensor_bytes_list.append( serialObj.read_byte() )    
             
         
-        data_bytes = sensor_bytes_list[ self.low_byte_range : self.upp_byte_range ]
+        data_bytes = sensor_bytes_list[ self.offset : self.offset + self.size ]
         
         #still need to format
         
