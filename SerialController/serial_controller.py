@@ -55,7 +55,7 @@ class SerialObj:
             print(f"Error: {e}")
             return b""
     
-    def read_bytes(self, num_bytes) -> bytearray:
+    def read_bytes(self, num_bytes: int) -> bytearray:
         try:
             read_bytes = []
             for _ in range(num_bytes): 
