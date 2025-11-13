@@ -1,6 +1,6 @@
 from .controller import Controller
 from .firmware import Firmware
-from .sensor import Sensor
+from .sensor import BaseSensor
 from typing import List, Callable
 
 class BaseController:

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 @dataclass
-class Sensor:
+class BaseSensor:
     short_name: str
     name: str
     size: int
     data_type: type
-    units: str
+    unit: str
 
     def __str__(self):
         return (
@@ -15,6 +15,6 @@ class Sensor:
             "\n Name: {}".format(self.name) + 
             "\n Size: {}".format(self.size) + 
             "\n Data Type: {}".format(self.data_type) +
-            "\n Units: {}".format(self.units) +
+            "\n Unit: {}".format(self.unit) +
             "\n}"
         )
