@@ -4,11 +4,21 @@ from typing import Callable
 import time
 
 class Sensor(BaseSensor):
-    #changes: added offset, size, opcode to init
-    def __init__( self, name: str, unit: str, convert_data: Callable[[float], float,], offset : int, size : int, opcode : bytes, data_type: type) :
+    def __init__(
+            self, 
+            short_name: str, 
+            name: str, 
+            size: int, 
+            data_type: type, 
+            unit: str, 
+            convert_data: Callable[[float | int], float | int,], 
+            poll_code: bytes, 
+            offset: int
+            ):
 
-        super().__init__(name, name, size, data_type, unit)
-        self.convert_data: Callable[[float], float] = convert_data
+        super().__init__(short_name, name, size, data_type, unit)
+        self.convert_data: Callable[[float | int], float | int] = convert_data
+        self.poll_code: bytes = poll_code
         self.offset: int = offset
         self.opcode: bytes = opcode
     
