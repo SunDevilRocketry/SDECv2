@@ -49,22 +49,19 @@ class SerialObj:
 
     def read_byte(self) -> bytes:
         try:
-            data = self.serialObj.read(1)
+            data = self.serialObj.read(size=1)
             return data
         except serial.SerialException as e:
             print(f"Error: {e}")
             return b""
     
-    def read_bytes(self, num_bytes: int) -> bytearray:
+    def read_bytes(self, num_bytes: int) -> bytes:
         try:
-            read_bytes = []
-            for _ in range(num_bytes): 
-                read_bytes.append(self.serialObj.read())
-                
-            return bytearray(read_bytes)
+            data = self.serialObj.read(size=num_bytes)
+            return data
         except serial.SerialException as e:
             print(f"Error: {e}")
-            return bytearray([])
+            return b""
     
     def __str__(self):
         return (
