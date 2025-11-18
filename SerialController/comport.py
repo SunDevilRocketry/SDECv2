@@ -17,7 +17,8 @@ class Comport:
         if self.status is Status.CLOSED:
             self.status = Status.OPEN
             return True
-        else: return False
+        else: 
+            return False
 
     def close(self) -> bool:
         if self.status is Status.OPEN:
