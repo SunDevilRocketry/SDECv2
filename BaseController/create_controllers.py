@@ -1,5 +1,5 @@
 from .controller import Controller
-from .sensor import BaseSensor
+from .base_sensor import BaseSensor
 
 def flight_computer_rev2_controller() -> Controller:
     # TODO: update when new state estimations for yaw created

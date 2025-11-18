@@ -1,4 +1,4 @@
-from .sensor import BaseSensor
+from .base_sensor import BaseSensor
 from dataclasses import dataclass
 from typing import Dict, List
 
