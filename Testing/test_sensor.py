@@ -1,78 +1,63 @@
+import time
+
 from BaseController import *
 from BaseController import create_controllers
 from Sensor import Sensor
+from Sensor import conv_functions
 from SerialController import SerialSentry, SerialObj, Comport
 
-def conv_fucntion(raw_data: float) -> float:
-    return raw_data * 2.0 # Example conversion logic
+def test_sensor():
+    # Create the firmware object
+    appa_firmware = Firmware(
+            id=b"\x06",
+            name="APPA",
+            preset_frame_size=0,
+            preset_file=""
+        )
 
-serial_connection = SerialObj()
+    # Use premade functions to create the APPA Rev2 Base Controller
+    flight_computer_rev2_controller = create_controllers.flight_computer_rev2_controller()
+    appa_fc_rev2_base_controller = BaseController(flight_computer_rev2_controller, appa_firmware)
 
-sensor = Sensor(
-    name = "Test Sensor",
-    unit = "units",
-    convert_data = conv_fucntion,
-    offset = 4, 
-    size = 2,
-    opcode = b'\x03',
-    data_type=int
-)
+    # Extract the sensor poll codes from the APPA Rev2 Base Controller
+    poll_codes = appa_fc_rev2_base_controller.controller.poll_codes
 
-print(f"Sensor Name: {sensor.name}")
-print(f"Sensor Unit: {sensor.unit}")
-#convert data example call
-print(f"Converted Data: {sensor.convert_data(10.0)}")  # Example raw data input
+    # Extract the Sensor objects for the AccX, AccY, and AccZ sensors
+    acc_sensors = []
+    offset = 0
+    for i, (poll_code, base_sensor) in enumerate(poll_codes.items()):
+        if i == 3: break
 
-print(f"Data Dump: {sensor.data_dump(b'\x01', serial_connection)}")  # Example subcommand
+        new_sensor = Sensor(
+            short_name=base_sensor.short_name,
+            name=base_sensor.name,
+            size=base_sensor.size,
+            data_type=base_sensor.data_type,
+            unit=base_sensor.unit,
+            convert_data=conv_functions.imu_accel,
+            poll_code=poll_code,
+            offset=offset
+        )
 
-# Make base controller
-appa_firmware = Firmware(
-        id=b"\x06",
-        name="APPA",
-        preset_frame_size=0,
-        preset_file=""
-    )
+        acc_sensors.append(new_sensor)
+        offset += base_sensor.size
 
-flight_computer_rev2_callable = create_controllers.flight_computer_rev2_controller
+    # Create the serial connection
+    serial_connection = SerialObj()
+    serial_connection.init_comport("COM3", 921600, 5)
+    serial_connection.open_comport()
 
-appa_fc_rev2_base_controller = BaseController(flight_computer_rev2_callable, appa_firmware)
+    # Get each acceleration sensor's data dump
+    print("Acc readings:")
+    for sensor in acc_sensors:
+        dump_val = sensor.data_dump(serial_connection)
 
-poll_codes = appa_fc_rev2_base_controller.controller.poll_codes
+        if dump_val:
+            print(f"{sensor.name} : {dump_val:.2f} {sensor.unit}")
+        else:
+            print(f"{sensor.name} : Data Dump returned None")
+    
+    serial_connection.close_comport()
 
-#prototype making full list of sensor using dictionary from base controller just first three though and do those tests i have above
-#do for loop down here
-
-#this for loop to test all sensors
-#for sensor in poll_codes.values(): 
-
-for poll_code, base_sensor in poll_codes.items():
-    new_sensor = Sensor(
-        name=base_sensor.name,
-        unit=base_sensor.unit,
-        convert_data=conv_fucntion,
-        offset=2,
-        size=2,
-        opcode=poll_code,
-        data_type=base_sensor.data_type
-    )
-
-    #new_sensor.data_dump()
-
-
-
-"""
-    appa_sensor_sizes = {
-    "raw": {
-        "accX" :         2,
-        "accY" :         2,
-        "accZ" :         2,
-        "gyroX":         2,
-        "gyroY":         2,
-        "gyroZ":         2,
-        "magX" :         2,
-        "magY" :         2,
-        "magZ" :         2,
-        "imut" :         2,
-        "pres" :         4,
-        "temp" :         4
-        """
+if __name__ == "__main__":
+    test_sensor()

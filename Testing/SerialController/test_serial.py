@@ -13,13 +13,13 @@ def test_serial():
     print("After open comport")
     print(serial_connection)
 
-    serial_connection.send_byte(b"\x01")
+    serial_connection.send(b"\x01")
     print(f"Sent byte {b"\x01"}")
     
     print("After sending byte")
     print(serial_connection)
 
-    data = serial_connection.read_byte()
+    data = serial_connection.read()
     print(f"Received byte {data}")
 
     if data == b"\x05":
