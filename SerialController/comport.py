@@ -8,16 +8,17 @@ class Status(Enum):
 
 class Comport:
     def __init__(self, name: str, baudrate: int, timeout: int):
-        self.name = name
-        self.status = Status.CLOSED
-        self.baudrate = baudrate
-        self.timeout = timeout
+        self.name: str = name
+        self.status: Status = Status.CLOSED
+        self.baudrate: int = baudrate
+        self.timeout: int = timeout
 
     def open(self) -> bool:
         if self.status is Status.CLOSED:
             self.status = Status.OPEN
             return True
-        else: return False
+        else: 
+            return False
 
     def close(self) -> bool:
         if self.status is Status.OPEN:
@@ -29,10 +30,11 @@ class Comport:
     def __str__(self):
         return (
             "Comport:{" +
-            "Name: {}".format(self.name) +
-            "Status: {}".format(self.status) +
-            "Baudrate: {}".format(self.baudrate) +
-            "Timeout: {}}}".format(self.timeout)
+            "\n Name: {}".format(self.name) +
+            "\n Status: {}".format(self.status) +
+            "\n Baudrate: {}".format(self.baudrate) +
+            "\n Timeout: {}".format(self.timeout) +
+            "\n}"
         )
     
     def __repr__(self):

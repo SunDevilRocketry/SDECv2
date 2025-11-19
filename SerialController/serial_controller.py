@@ -5,7 +5,7 @@ from .comport import Comport, Status
 class SerialObj:
     def __init__(self):
         self.comport: Comport
-        self.serialObj = serial.Serial()
+        self.serialObj: serial.Serial = serial.Serial()
     
     def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
         self.comport = Comport(name, baudrate, timeout)
@@ -24,7 +24,6 @@ class SerialObj:
         
         return True
 
-    
     def close_comport(self) -> bool:
         if self.comport.status is Status.CLOSED: return False
         if not self.serialObj.is_open: return False
@@ -35,41 +34,25 @@ class SerialObj:
 
         return True
 
-    def send_byte(self, byte: bytes) -> None:
-        try:
-            self.serialObj.write(byte)
-        except serial.SerialException as e:
-            print(f"Error: {e}")
-
-    def send_bytes(self, bytes: bytearray) -> None:
+    def send(self, bytes: bytes) -> None:
         try:
             self.serialObj.write(bytes)
         except serial.SerialException as e:
             print(f"Error: {e}")
 
-    def read_byte(self) -> bytes:
+    def read(self, num_bytes: int = 1) -> bytes:
         try:
-            data = self.serialObj.read(1)
+            data = self.serialObj.read(size=num_bytes)
             return data
         except serial.SerialException as e:
             print(f"Error: {e}")
             return b""
     
-    def read_bytes(self, num_bytes: int) -> bytearray:
-        try:
-            read_bytes = []
-            for _ in range(num_bytes): 
-                read_bytes.append(self.serialObj.read())
-                
-            return bytearray(read_bytes)
-        except serial.SerialException as e:
-            print(f"Error: {e}")
-            return bytearray([])
-    
     def __str__(self):
         return (
                 "SerialController:{" +
-                "{}".format(self.comport) + " "
+                "\n{}".format(self.comport) +
+                "\n}"
             )
     
     def __repr__(self):
