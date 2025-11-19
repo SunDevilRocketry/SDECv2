@@ -1,11 +1,11 @@
 from .controller import Controller
 from .firmware import Firmware
-from .sensor import Sensor
+from .base_sensor import BaseSensor
 from typing import List, Callable
 
 class BaseController:
-    def __init__(self, controller_func: Callable[[], Controller], firmware: Firmware):
-        self.controller: Controller = controller_func()
+    def __init__(self, controller: Controller, firmware: Firmware):
+        self.controller: Controller = controller
         self.firmware: Firmware = firmware
 
     def __str__(self):

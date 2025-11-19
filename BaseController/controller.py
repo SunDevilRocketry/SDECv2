@@ -1,4 +1,4 @@
-from .sensor import Sensor
+from .base_sensor import BaseSensor
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -6,7 +6,7 @@ from typing import Dict, List
 class Controller:
     id: bytes
     name: str
-    poll_codes: Dict[bytes, Sensor]
+    poll_codes: Dict[bytes, BaseSensor]
     sensor_frame_size: int
     sensor_data_file: str
 
