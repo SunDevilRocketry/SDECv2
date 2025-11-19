@@ -24,7 +24,6 @@ class SerialObj:
         
         return True
 
-    
     def close_comport(self) -> bool:
         if self.comport.status is Status.CLOSED: return False
         if not self.serialObj.is_open: return False
@@ -35,27 +34,13 @@ class SerialObj:
 
         return True
 
-    def send_byte(self, byte: bytes) -> None:
-        try:
-            self.serialObj.write(byte)
-        except serial.SerialException as e:
-            print(f"Error: {e}")
-
-    def send_bytes(self, bytes: bytearray) -> None:
+    def send(self, bytes: bytes) -> None:
         try:
             self.serialObj.write(bytes)
         except serial.SerialException as e:
             print(f"Error: {e}")
 
-    def read_byte(self) -> bytes:
-        try:
-            data = self.serialObj.read(size=1)
-            return data
-        except serial.SerialException as e:
-            print(f"Error: {e}")
-            return b""
-    
-    def read_bytes(self, num_bytes: int) -> bytes:
+    def read(self, num_bytes: int = 1) -> bytes:
         try:
             data = self.serialObj.read(size=num_bytes)
             return data
