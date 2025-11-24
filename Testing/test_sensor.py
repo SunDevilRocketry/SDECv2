@@ -1,6 +1,6 @@
 import time
 
-from BaseController import *
+from BaseController import Firmware, BaseController
 from BaseController import create_controllers
 from Sensor import Sensor
 from Sensor import conv_functions
