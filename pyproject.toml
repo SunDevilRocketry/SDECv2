@@ -1,0 +1,3 @@
+[project]
+name = "SDECv2"
+requires-python = >=3.10
