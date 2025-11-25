@@ -23,6 +23,15 @@ class Sensor(BaseSensor):
         self.poll_code: bytes = poll_code
         self.offset: int = offset
 
+    def __eq__(self, other):
+        if not isinstance(other, Sensor):
+            return False
+        
+        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
+    
+    def __hash__(self):
+        return hash((self.short_name, self.poll_code, self.offset))
+
     def data_poll(self, 
                   serial_connection: SerialObj, 
                   timeout: int | None=None, 
