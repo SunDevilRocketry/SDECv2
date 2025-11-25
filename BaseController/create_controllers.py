@@ -2,7 +2,6 @@ from .controller import Controller
 from .base_sensor import BaseSensor
 
 def flight_computer_rev2_controller() -> Controller:
-    # TODO: update when new state estimations for yaw created
     poll_codes = {
         b'\x00': BaseSensor("accX", "Accelerometer X", 2, int, "m/s/s"),
         b'\x01': BaseSensor("accY", "Accelerometer Y", 2, int, "m/s/s"),
@@ -24,30 +23,32 @@ def flight_computer_rev2_controller() -> Controller:
 
         b'\x10': BaseSensor("rollDeg", "Roll Body Angle", 4, float, "deg"),
         b'\x11': BaseSensor("pitchDeg", "Pitch Body Angle", 4, float, "deg"),
-        b'\x12': BaseSensor("rollRate", "Roll Body Rate", 4, float, "deg/s"),
-        b'\x13': BaseSensor("pitchRate", "Pitch Body Rate", 4, float, "deg/s"),
+        b'\x12': BaseSensor("yawDeg", "Yaw Body Angle", 4, float, "deg"),
+        b'\x13': BaseSensor("rollRate", "Roll Body Rate", 4, float, "deg/s"),
+        b'\x14': BaseSensor("pitchRate", "Pitch Body Rate", 4, float, "deg/s"),
+        b'\x15': BaseSensor("yawRate", "Yaw Body Rate", 4, float, "deg/s"),
 
-        b'\x14': BaseSensor("velo", "Velocity", 4, float, "m/s"),
-        b'\x15': BaseSensor("velo_x", "Velo X", 4, float, "m/s"),
-        b'\x16': BaseSensor("velo_y", "Velo Y", 4, float, "m/s"),
-        b'\x17': BaseSensor("velo_z", "Velo Z", 4, float, "m/s"),
+        b'\x16': BaseSensor("velo", "Velocity", 4, float, "m/s"),
+        b'\x17': BaseSensor("velo_x", "Velo X", 4, float, "m/s"),
+        b'\x18': BaseSensor("velo_y", "Velo Y", 4, float, "m/s"),
+        b'\x19': BaseSensor("velo_z", "Velo Z", 4, float, "m/s"),
 
-        b'\x18': BaseSensor("pos", "Position", 4, float, "m"),
-        b'\x19': BaseSensor("pres", "Barometric Pressure", 4, float, "kPa"),
-        b'\x1A': BaseSensor("temp", "Barometric Temperature", 4, float, "C"),
-        b'\x1B': BaseSensor("alt", "Barometric Altitude", 4, float, "m"),
-        b'\x1C': BaseSensor("bvelo", "Barometric Velocity", 4, float, "m/s"),
+        b'\x1A': BaseSensor("pos", "Position", 4, float, "m"),
+        b'\x1B': BaseSensor("pres", "Barometric Pressure", 4, float, "kPa"),
+        b'\x1C': BaseSensor("temp", "Barometric Temperature", 4, float, "C"),
+        b'\x1D': BaseSensor("alt", "Barometric Altitude", 4, float, "m"),
+        b'\x1E': BaseSensor("bvelo", "Barometric Velocity", 4, float, "m/s"),
 
-        b'\x1D': BaseSensor("altg", "GPS Altitude (ft)", 4, float, "ft"),
-        b'\x1E': BaseSensor("speedg", "GPS Speed (KmH)", 4, float, "km/h"),
-        b'\x1F': BaseSensor("utc_time", "GPS UTC Time", 4, float, "s"),
-        b'\x20': BaseSensor("long", "GPS Longitude (deg)", 4, float, "deg"),
-        b'\x21': BaseSensor("lat", "GPS Latitude (deg)", 4, float, "deg"),
+        b'\x1F': BaseSensor("altg", "GPS Altitude (ft)", 4, float, "ft"),
+        b'\x20': BaseSensor("speedg", "GPS Speed (KmH)", 4, float, "km/h"),
+        b'\x21': BaseSensor("utc_time", "GPS UTC Time", 4, float, "s"),
+        b'\x22': BaseSensor("long", "GPS Longitude (deg)", 4, float, "deg"),
+        b'\x23': BaseSensor("lat", "GPS Latitude (deg)", 4, float, "deg"),
 
-        b'\x22': BaseSensor("ns", "GPS North/South", 1, str, "N/S"),
-        b'\x23': BaseSensor("ew", "GPS East/West", 1, str, "E/W"),
-        b'\x24': BaseSensor("gll_s", "GPS GLL Status", 1, str, ""),
-        b'\x25': BaseSensor("rmc_s", "GPS RMC Status", 1, str, "")
+        b'\x24': BaseSensor("ns", "GPS North/South", 1, str, "N/S"),
+        b'\x25': BaseSensor("ew", "GPS East/West", 1, str, "E/W"),
+        b'\x26': BaseSensor("gll_s", "GPS GLL Status", 1, str, ""),
+        b'\x27': BaseSensor("rmc_s", "GPS RMC Status", 1, str, "")
     }
 
     return Controller(
