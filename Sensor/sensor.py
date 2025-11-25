@@ -1,7 +1,7 @@
 import builtins
 import time
 
-from .util import bytes_to_float, bytes_to_int
+from .util import bytes_to_float, bytes_to_int, process_data_bytes
 from BaseController import BaseSensor
 from SerialController import SerialObj
 from typing import Callable, Generator
@@ -22,6 +22,15 @@ class Sensor(BaseSensor):
         self.convert_data: Callable[[float | int], float | int] = convert_data
         self.poll_code: bytes = poll_code
         self.offset: int = offset
+
+    def __eq__(self, other):
+        if not isinstance(other, Sensor):
+            return False
+        
+        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
+    
+    def __hash__(self):
+        return hash((self.short_name, self.poll_code, self.offset))
 
     def data_poll(self, 
                   serial_connection: SerialObj, 
@@ -52,26 +61,9 @@ class Sensor(BaseSensor):
             serial_connection.send(b"\x51")
 
             # Read and convert the sensor bytes
-            data_bytes = serial_connection.read(num_bytes=self.size)
-            if data_bytes:
-                match self.data_type:
-                    case builtins.float:
-                        data_number = bytes_to_float(data_bytes)
-                    case builtins.int:
-                        data_number = bytes_to_int(data_bytes)
-                    case _:
-                        data_number = None
-
-                if data_number is not None:
-                    converted_number = self.convert_data(data_number)
-                    if converted_number is not None:
-                        yield converted_number
-                    else:
-                        print("Failed to convert number")
-                else:
-                    print("Failed to convert bytes to number")
-            else:
-                print("Failed to get data from board")
+            data_bytes = serial_connection.read(self.size)
+            converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
+            if converted_number is not None: yield converted_number
 
             poll_count += 1
 
@@ -90,8 +82,6 @@ class Sensor(BaseSensor):
             time.sleep(0.1)
             # Resume poll code
             serial_connection.send(b"\xEF")
-
-        yield 0
 
     def data_dump(self, serial_connection: SerialObj) -> float | int:
         # Sensor opcode
@@ -115,28 +105,8 @@ class Sensor(BaseSensor):
 
         # Read and convert the sensor bytes
         data_bytes = serial_connection.read(num_bytes=self.size)
-        if data_bytes:
-            match self.data_type:
-                case builtins.float:
-                    data_number = bytes_to_float(data_bytes)
-                case builtins.int:
-                    data_number = bytes_to_int(data_bytes)
-                case _:
-                    data_number = None
-
-            if data_number:
-                converted_number = self.convert_data(data_number)
-                if converted_number:
-                    # Stop poll code
-                    serial_connection.send(b"\x74")
-
-                    return converted_number
-                else:
-                    print("Failed to convert number")
-            else:
-                print("Failed to convert bytes to number")
-        else:
-            print("Failed to get data from board")
+        converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
+        if converted_number is not None: return converted_number
 
         # Stop poll code
         serial_connection.send(b"\x74")
