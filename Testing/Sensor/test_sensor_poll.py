@@ -50,6 +50,10 @@ def test_sensor():
     # Poll AccX for 10 readings
     print("AccX readings: (10 count poll)")
     for reading in acc_x.poll(serial_connection, count=10): print(f"{reading:.2f} {acc_x.unit}")
+
+     # Poll AccX for nothing
+    print("AccX readings: (nothing)")
+    for reading in acc_x.poll(serial_connection): print(f"{reading:.2f} {acc_x.unit}")
     
     serial_connection.close_comport()
 

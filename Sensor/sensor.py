@@ -56,7 +56,7 @@ class Sensor(BaseSensor):
         # Polling loop
         start = time.time()
         poll_count = 0
-        while True:
+        while timeout or count:
             # Request poll code
             serial_connection.send(b"\x51")
 
