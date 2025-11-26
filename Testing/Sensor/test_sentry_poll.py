@@ -30,15 +30,22 @@ def test_sensor():
     serial_connection.init_comport("COM3", 921600, 5)
     serial_connection.open_comport()
 
-    # Get the sensor dump from the sentry
-    print("Sentry Dump:")
-    sensor_dump = sensor_sentry.dump(serial_connection)
+    # Get the sensor poll from the sentry
+    print("Sentry Poll (2 seconds):")
+    for sensor_poll in sensor_sentry.poll(serial_connection, timeout=2):
+        for sensor, readout in sensor_poll.items():
+            if readout:
+                print(f"{sensor.name}: {readout:.2f} {sensor.unit}")
+            else:
+                print(f"{sensor.name}: 0.0 {sensor.unit}")
 
-    for sensor, readout in sensor_dump.items():
-        if readout:
-            print(f"{sensor.name}: {readout:.2f} {sensor.unit}")
-        else:
-            print(f"{sensor.name}: 0.0 {sensor.unit}")
+    print("Sentry Poll (count 10):")
+    for sensor_poll in sensor_sentry.poll(serial_connection, count=10):
+        for sensor, readout in sensor_poll.items():
+            if readout:
+                print(f"{sensor.name}: {readout:.2f} {sensor.unit}")
+            else:
+                print(f"{sensor.name}: 0.0 {sensor.unit}")
 
     serial_connection.close_comport()
 

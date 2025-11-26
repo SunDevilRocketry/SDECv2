@@ -5,6 +5,7 @@ from BaseController import create_controllers
 from Sensor import Sensor
 from Sensor import conv_functions
 from SerialController import SerialSentry, SerialObj, Comport
+from typing import List
 
 def test_sensor():
     # Create the firmware object
@@ -23,7 +24,7 @@ def test_sensor():
     poll_codes = appa_fc_rev2_base_controller.controller.poll_codes
 
     # Extract the Sensor objects for the AccX, AccY, and AccZ sensors
-    acc_sensors = []
+    acc_sensors: List[Sensor] = []
     offset = 0
     for i, (poll_code, base_sensor) in enumerate(poll_codes.items()):
         if i == 3: break
@@ -50,7 +51,7 @@ def test_sensor():
     # Get each acceleration sensor's data dump
     print("Acc readings:")
     for sensor in acc_sensors:
-        dump_val = sensor.data_dump(serial_connection)
+        dump_val = sensor.dump(serial_connection)
 
         if dump_val:
             print(f"{sensor.name} : {dump_val:.2f} {sensor.unit}")

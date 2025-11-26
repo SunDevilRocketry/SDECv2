@@ -32,7 +32,7 @@ class Sensor(BaseSensor):
     def __hash__(self):
         return hash((self.short_name, self.poll_code, self.offset))
 
-    def data_poll(self, 
+    def poll(self, 
                   serial_connection: SerialObj, 
                   timeout: int | None=None, 
                   count: int | None=None
@@ -56,7 +56,7 @@ class Sensor(BaseSensor):
         # Polling loop
         start = time.time()
         poll_count = 0
-        while True:
+        while timeout or count:
             # Request poll code
             serial_connection.send(b"\x51")
 
@@ -83,7 +83,7 @@ class Sensor(BaseSensor):
             # Resume poll code
             serial_connection.send(b"\xEF")
 
-    def data_dump(self, serial_connection: SerialObj) -> float | int:
+    def dump(self, serial_connection: SerialObj) -> float | int:
         # Sensor opcode
         serial_connection.send(b"\x03") 
 
@@ -106,9 +106,10 @@ class Sensor(BaseSensor):
         # Read and convert the sensor bytes
         data_bytes = serial_connection.read(num_bytes=self.size)
         converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
-        if converted_number is not None: return converted_number
-
+        
         # Stop poll code
         serial_connection.send(b"\x74")
+
+        if converted_number is not None: return converted_number
 
         return 0
