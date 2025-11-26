@@ -1,9 +1,10 @@
 import builtins
+import time
 
 from .sensor import Sensor
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
 from SerialController import SerialObj
-from typing import List, Callable, Dict, Optional
+from typing import List, Callable, Dict, Optional, Generator
 
 class SensorSentry:
     def __init__(self, sensors: Optional[List[Sensor]] = None):
@@ -28,7 +29,76 @@ class SensorSentry:
         self.sensors.append(sensor)
         self.size += sensor.size
 
-    def sensor_dump(self, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
+    def poll(self, 
+             serial_connection: SerialObj,
+             timeout: int | None=None,
+             count: int | None=None
+             ) -> Generator[Dict[Sensor, float | int | None], None, None]:
+        # Verify sentry has configured sensors
+        if len(self.sensors) == 0: 
+            print("Sentry has no sensors")
+            return None
+        
+        # Sensor opcode
+        serial_connection.send(b"\x03")
+
+        # Poll subcommand code 
+        serial_connection.send(b"\x02")
+
+        # Tell the controller how many sensors to use 
+        num_sensors = len(self.sensors)
+        serial_connection.send(num_sensors.to_bytes(1, "big"))
+
+        # Send all the sensor poll codes
+        for sensor in self.sensors:
+            serial_connection.send(sensor.poll_code)
+
+        # Start poll code 
+        serial_connection.send(b"\xF3")
+
+        # Polling loop
+        start = time.time()
+        poll_count = 0
+        while timeout or count:
+            # Request poll code
+            serial_connection.send(b"\x51")
+
+            # Read and convert the sensor bytes
+            data_bytes = serial_connection.read(self.size)
+            sensor_poll = {}
+            offset = 0
+            for sensor in self.sensors:
+                sensor_data_bytes = data_bytes[offset:offset + sensor.size]
+                converted_number = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
+                sensor_poll[sensor] = converted_number
+                offset += sensor.size
+            
+            yield sensor_poll
+
+            poll_count += 1
+
+            if timeout and time.time() - start >= timeout:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
+
+            if count and poll_count >= count:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
+
+            # Wait poll code
+            serial_connection.send(b"\x44") 
+            time.sleep(0.2)
+            # Resume poll code
+            serial_connection.send(b"\xEF")
+
+    def dump(self, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
+        # Verify sentry has configured sensors
+        if len(self.sensors) == 0: 
+            print("Sentry has no sensors")
+            return {}
+        
         # Sensor opcode 
         serial_connection.send(b"\x03")
 
