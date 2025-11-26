@@ -106,9 +106,10 @@ class Sensor(BaseSensor):
         # Read and convert the sensor bytes
         data_bytes = serial_connection.read(num_bytes=self.size)
         converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
-        if converted_number is not None: return converted_number
-
+        
         # Stop poll code
         serial_connection.send(b"\x74")
+
+        if converted_number is not None: return converted_number
 
         return 0
