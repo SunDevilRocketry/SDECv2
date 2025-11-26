@@ -32,7 +32,7 @@ class Sensor(BaseSensor):
     def __hash__(self):
         return hash((self.short_name, self.poll_code, self.offset))
 
-    def data_poll(self, 
+    def poll(self, 
                   serial_connection: SerialObj, 
                   timeout: int | None=None, 
                   count: int | None=None
@@ -83,7 +83,7 @@ class Sensor(BaseSensor):
             # Resume poll code
             serial_connection.send(b"\xEF")
 
-    def data_dump(self, serial_connection: SerialObj) -> float | int:
+    def dump(self, serial_connection: SerialObj) -> float | int:
         # Sensor opcode
         serial_connection.send(b"\x03") 
 
