@@ -32,7 +32,7 @@ def test_sensor():
 
     # Get the sensor dump from the sentry
     print("Sentry Dump:")
-    sensor_dump = sensor_sentry.sensor_dump(serial_connection)
+    sensor_dump = sensor_sentry.dump(serial_connection)
 
     for sensor, readout in sensor_dump.items():
         if readout:
