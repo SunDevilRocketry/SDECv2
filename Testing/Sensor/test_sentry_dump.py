@@ -40,6 +40,18 @@ def test_sensor():
         else:
             print(f"{sensor.name}: 0.0 {sensor.unit}")
 
+    # Get the sensor dump from the Flight Computer Rev2 Sentry
+    fc_rev2_sentry = create_sensors.flight_computer_rev2_sentry()
+
+    print("FCRev2 Sentry Dump:")
+    sensor_dump = fc_rev2_sentry.dump(serial_connection)
+
+    for sensor, readout in sensor_dump.items():
+        if readout:
+            print(f"{sensor.name}: {readout:.2f} {sensor.unit}")
+        else:
+            print(f"{sensor.name}: 0.0 {sensor.unit}")
+
     serial_connection.close_comport()
 
 if __name__ == "__main__":

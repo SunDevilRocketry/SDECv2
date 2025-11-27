@@ -1,7 +1,9 @@
 from .conv_functions import imu_accel, imu_gyro, baro_press
 from .sensor import Sensor
+from .sensor_sentry import SensorSentry
 from typing import List
 
+# Create all the sensors the Flight Computer Rev2 uses
 def flight_computer_rev2_sensors() -> List[Sensor]:
     sensor_tuples = [
         (b'\x00', "accX", "Accelerometer X", 2, int, "m/s/s", imu_accel),
@@ -60,3 +62,9 @@ def flight_computer_rev2_sensors() -> List[Sensor]:
         offset += size
 
     return sensors
+
+# Create a SerialSentry with all the sensors the Flight Computer Rev2 uses
+def flight_computer_rev2_sentry() -> SensorSentry:
+    sensors = flight_computer_rev2_sensors()
+
+    return SensorSentry(sensors)
