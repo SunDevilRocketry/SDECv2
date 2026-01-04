@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 from .conv_functions import imu_accel, imu_gyro, baro_press
 from .sensor import Sensor
 from typing import List
