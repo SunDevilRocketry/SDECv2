@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 def imu_accel(readout):
 	# Convert from 16 bit unsigned to 16 bit signed
 	if readout < 0x8000: 

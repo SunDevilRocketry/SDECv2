@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 from .base_sensor import BaseSensor
 from dataclasses import dataclass
 from typing import Dict, List
