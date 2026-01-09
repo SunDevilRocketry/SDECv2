@@ -1,11 +1,13 @@
+from .toggle import Toggle
 from BaseController import BaseSensor
+from dataclasses import dataclass
+from typing import List
 
 @dataclass
 class Feature:
-    
     name: str
+    value: Toggle
     sensors: List[BaseSensor]
-    
-    
-#bitmask string spits out 0 or 1
-#do sensor_flags same as other
+
+    def bit(self):
+        return "1" if self.value is Toggle.ENABLED else "0"
