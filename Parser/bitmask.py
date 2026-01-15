@@ -9,6 +9,6 @@ class Bitmask():
 
     def __str__(self):
         try:
-            return "".join(feature.bit() for feature in self.features)
+            return "".join(feature.bit() for feature in reversed(self.features))
         except KeyError:
             return ""

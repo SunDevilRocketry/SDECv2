@@ -9,3 +9,10 @@ class Preset:
     # imu_offset: ImuOffset
     # baro_preset: BaroPreset
     # sero_preset: ServoPreset
+
+    def __str__(self):
+        return (
+            "Preset:{" + 
+            "\n Config Settings: {}".format(self.config_settings) +
+            "\n}"
+        )
