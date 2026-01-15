@@ -9,9 +9,9 @@ def test_base_controller():
         preset_file=""
     )
 
-    flight_computer_rev2_callable = create_controllers.flight_computer_rev2_controller
+    flight_computer_rev2 = create_controllers.flight_computer_rev2_controller()
 
-    appa_fc_rev2_base_controller = BaseController(flight_computer_rev2_callable, appa_firmware)
+    appa_fc_rev2_base_controller = BaseController(flight_computer_rev2, appa_firmware)
 
     print(appa_fc_rev2_base_controller)
 

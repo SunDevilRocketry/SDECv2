@@ -21,3 +21,6 @@ class BaseSensor:
             "\n Unit: {}".format(self.unit) +
             "\n}"
         )
+    
+    def __repr__(self):
+        return self.__str__()
