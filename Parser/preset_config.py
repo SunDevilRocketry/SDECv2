@@ -10,7 +10,8 @@ class PresetConfig():
     enabled_flags: Bitmask
     enabled_data: Bitmask
     sensors: List[BaseSensor] = field(init=False)
-    struct_format: str = field(init=False)
+    struct_format: str = ">"
+    size: int = 0
 
     def __post_init__(self):
         self.sensors = []
@@ -23,6 +24,7 @@ class PresetConfig():
 
             for sensor in feature.sensors:
                 self.sensors.append(sensor)
+                self.size += sensor.size
 
                 match sensor.data_type:
                     case builtins.float:
