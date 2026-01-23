@@ -2,13 +2,19 @@
 # Copyright (c) 2025 Sun Devil Rocketry
 
 import serial
+import serial.tools.list_ports
 
 from .comport import Comport, Status
+from typing import List
 
 class SerialObj:
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
+
+    def available_comports(self) -> List[str]:
+        ports = serial.tools.list_ports.comports()
+        return [port.device for port in ports]
     
     def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
         self.comport = Comport(name, baudrate, timeout)
