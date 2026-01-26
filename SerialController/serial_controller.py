@@ -56,6 +56,12 @@ class SerialObj:
         except serial.SerialException as e:
             print(f"Error: {e}")
             return b""
+        
+    def reset_input_buffer(self) -> None:
+        try:
+            self.serialObj.reset_input_buffer()
+        except serial.SerialException as e:
+            print(f"Error: {e}")
     
     def __str__(self):
         return (
