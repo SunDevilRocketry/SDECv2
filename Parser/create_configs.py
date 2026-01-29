@@ -1,11 +1,50 @@
-from .bitmask import Bitmask
+from .bitmask import FeatureBitmask, DataBitmask
+from .data import Data
 from .feature import Feature
 from .toggle import Toggle
 from BaseController import BaseSensor
 
-def appa_bitmask() -> Bitmask:
+def appa_feature_bitmask() -> FeatureBitmask:
     features = [
         Feature(
+            name="Data Logging",
+            value=Toggle.ENABLED
+        ),
+        Feature(
+            name="Dual Deploy",
+            value=Toggle.DISABLED
+        ),
+        Feature(
+            name="Active Roll Control",
+            value=Toggle.DISABLED
+        ),
+        Feature(
+            name="Active Pitch Yaw Control",
+            value=Toggle.DISABLED
+        ),
+        Feature(
+            name="Wireless Transmission",
+            value=Toggle.DISABLED
+        ),
+        Feature(
+            name="Launch Detect Baro",
+            value=Toggle.ENABLED
+        ),
+        Feature(
+            name="Launch Detect Accel",
+            value=Toggle.ENABLED
+        ),
+        Feature(
+            name="GPS",
+            value=Toggle.DISABLED
+        )
+    ]
+
+    return FeatureBitmask(features=features)
+
+def appa_data_bitmask() -> DataBitmask:
+    datas = [
+        Data(
             name="raw",
             value=Toggle.ENABLED,
             sensors=[
@@ -26,7 +65,7 @@ def appa_bitmask() -> Bitmask:
                 BaseSensor("temp", "Barometric Temperature", 4, float, "C")
             ]
         ),
-        Feature(
+        Data(
             name="conv",
             value=Toggle.ENABLED,
             sensors=[
@@ -39,9 +78,9 @@ def appa_bitmask() -> Bitmask:
                 BaseSensor("gyroZconv", "Pre-converted Gyro Z", 4, float, "deg/s")
             ]
         ),
-        Feature(
+        Data(
             name="state_estim",
-            value=Toggle.DISABLED,
+            value=Toggle.ENABLED,
             sensors=[
                 BaseSensor("rollDeg", "Roll Body Angle", 4, float, "deg"),
                 BaseSensor("pitchDeg", "Pitch Body Angle", 4, float, "deg"),
@@ -58,9 +97,9 @@ def appa_bitmask() -> Bitmask:
                 BaseSensor("bvelo", "Barometric Velocity", 4, float, "m/s")
             ]
         ),
-        Feature(
+        Data(
             name="gps",
-            value=Toggle.DISABLED,
+            value=Toggle.ENABLED,
             sensors=[
                 BaseSensor("altg", "GPS Altitude (ft)", 4, float, "ft"),
                 BaseSensor("speedg", "GPS Speed (KmH)", 4, float, "km/h"),
@@ -74,13 +113,13 @@ def appa_bitmask() -> Bitmask:
                 BaseSensor("rmc_s", "GPS RMC Status", 1, str, "")
             ]
         ),
-        Feature(
+        Data(
             name="canard",
-            value=Toggle.ENABLED,
+            value=Toggle.DISABLED,
             sensors=[
                 BaseSensor("feedback", "Canard Feedback", 4, float, "")
             ]
         )
     ]
 
-    return Bitmask(features=features)
+    return DataBitmask(datas=datas)
