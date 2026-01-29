@@ -1,7 +1,7 @@
 import builtins
 
 from .bitmask import Bitmask
-from BaseController import BaseSensor
+from ..BaseController import BaseSensor
 from dataclasses import dataclass, field
 from typing import List
 

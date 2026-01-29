@@ -5,7 +5,7 @@ import builtins
 import time
 
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
-from BaseController import BaseSensor
+from ..BaseController import BaseSensor
 from SerialController import SerialObj
 from typing import Callable, Generator
 

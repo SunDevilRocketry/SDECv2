@@ -1,7 +1,7 @@
 from .bitmask import Bitmask
 from .feature import Feature
 from .toggle import Toggle
-from BaseController import BaseSensor
+from ..BaseController import BaseSensor
 
 def appa_bitmask() -> Bitmask:
     features = [

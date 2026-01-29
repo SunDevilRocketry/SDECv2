@@ -1,5 +1,5 @@
 from .feature import Feature
-from BaseController import BaseSensor
+from ..BaseController import BaseSensor
 from dataclasses import dataclass, field
 from typing import Dict
 
