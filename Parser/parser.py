@@ -1,9 +1,10 @@
 import builtins
+import json
 import struct
 
 from .bitmask import FeatureBitmask, DataBitmask
 from .data import Data
-from .flash_data import FlashData
+from .flash_sensor_frame import FlashSensorFrame
 from .feature import Feature
 from .preset import Preset
 from .toggle import Toggle
@@ -19,25 +20,17 @@ class Parser:
         self.reset()
 
     def reset(self):
-        self.num_preset_frames = 0
-        self.preset_frame_size = 0
-        self.num_sensor_frames = 0
-        self.sensor_frame_size = 0
-        self.sensor_struct_format = ""
+        self.sensor_struct_format = ">"
         self._compute_frames()
 
     def _compute_frames(self):
         enabled_data = self.preset.config_settings.enabled_data
 
-        sensor_count = 0
         for i, bit in enumerate(str(enabled_data)):
             if bit == "0": continue
 
             data = enabled_data.datas[i]
             for sensor in data.sensors:
-                sensor_count += 1
-                self.sensor_frame_size += sensor.size
-
                 match sensor.data_type:
                     case builtins.float:
                         self.sensor_struct_format += "f"
@@ -49,29 +42,18 @@ class Parser:
                             case 4: self.sensor_struct_format += "i"  
 
                     case builtins.str:
-                        self.sensor_struct_format += "c"
-
-        self.preset_frame_size = self.sensor_frame_size
-        while self.preset_frame_size < self.preset.size + 2: # TODO confirm + 2
-            self.preset_frame_size += self.sensor_frame_size
+                        self.sensor_struct_format += "b"
     
-    def download_preset(self) -> FlashData:
-        return FlashData(
-            data_name=""
-        )
+    def download_preset(self) -> FlashSensorFrame:
+        return FlashSensorFrame()
     
-    def verify_preset(self) -> FlashData:
-        return FlashData(
-            data_name=""
-        )
+    def verify_preset(self) -> FlashSensorFrame:
+        return FlashSensorFrame()
     
-    def upload_preset(self) -> FlashData:    
-        return FlashData(
-            data_name=""
-        )
+    def upload_preset(self) -> FlashSensorFrame:
+        return FlashSensorFrame()
     
-    def flash_extract(self, serial_connection: SerialObj) -> List[FlashData]:
-        all_flash_data: List[FlashData] = []
+    def flash_extract(self, serial_connection: SerialObj, extract_to_file: bool) -> List[FlashSensorFrame]:
         # flash opcode
         serial_connection.send(b"\x22")
         # flash extract subcommand code
@@ -80,19 +62,32 @@ class Parser:
         # extract the number of frames in bitmask from flash (4096 blocks max)
         # each frame reads the amount of bytes the size of the frame
         # add these to the overall bytes of flash
-        num_frames = FLASH_SIZE // self.sensor_frame_size
-        sensor_frame_bytes = bytearray(FLASH_SIZE)
+        # num_frames = FLASH_SIZE // self.sensor_frame_size
+        # num_frames = math.ceil(FLASH_SIZE / 512)
+        # print(f"Num frames: {num_frames}")
+        # print(f"num_preset_frames: {self.num_preset_frames}")
+        # print(f"preset_frame_size: {self.preset_frame_size}")
+        # print(f"num_sensor_frames: {self.num_sensor_frames}")
+        # print(f"sensor_frame_size: {self.sensor_frame_size}")
 
-        offset = 0
+        num_frames = FLASH_SIZE // 512
+        print(f"Num frames: {num_frames}")
+
+        flash_bytes = bytearray()
         for i in range(num_frames):
-            if (i % 100 == 0): print(f"Reading block {i} ...")
-            # TODO confirm if active roll requires 4 extra bytes
-            chunk = serial_connection.read(self.sensor_frame_size)
-            sensor_frame_bytes[offset:offset + self.sensor_frame_size] = chunk
-            offset += self.sensor_frame_size
+            if (i % 128 == 0): print(f"Reading block {i} ...")
+            chunk = serial_connection.read(num_bytes=512)
+            
+            num_received = len(chunk)
+            if num_received == 0: 
+                print(f"[{i + 1}/{num_frames}] Timeout: Flash is empty")
+            elif num_received != 512:
+                print(f"[{i + 1}/{num_frames}] Timeout: Partial read of length {num_received}")
 
-        # receive unused bytes amount of bytes
-        serial_connection.read(FLASH_SIZE % self.sensor_frame_size)
+            flash_bytes.extend(chunk)
+
+        print(f"{len(flash_bytes)} bytes received from flash")
+        if len(flash_bytes) == FLASH_SIZE: print("Max flash bytes received")
 
         # receive status byte
         serial_connection.read()
@@ -100,36 +95,60 @@ class Parser:
         # get struct format from config preset
 
         # parse the bytes, using the presets struct format
-        # verify the adding 2s
-        preset_size = self.preset.size
-        preset_bytes = sensor_frame_bytes[2:preset_size + 2]
+        preset_bytes = flash_bytes[2:self.preset.size + 2]
         # TODO parse_preset()
-
+        # TODO this should create a parser object for use in the rest of flash extract
+        
+        print("preset bytes:")
+        print(preset_bytes)
+        print("*********")
+        
         # calculate frame size and num preset frames from preset data bitmask
         # use the size of the preset data bitmask as the sensor frame size
         # num preset frames is how many preset frames fit in the data size???
-        start_idx = self.num_preset_frames * self.sensor_frame_size
-        stop_idx = start_idx + self.sensor_frame_size
-
+        sensor_frame_names = []
         enabled_data = self.preset.config_settings.enabled_data
+        for i, bit in enumerate(str(enabled_data)):
+            if bit == "0": continue
+            data = enabled_data.datas[i]
+            for sensor in data.sensors: sensor_frame_names.append(sensor.name)
+        
+        sensor_frame_size = struct.calcsize(self.sensor_struct_format)
+        print(f"Sensor Frame Size: {sensor_frame_size}")
+
+        start_idx = self.preset.size + 2
+        stop_idx = start_idx + sensor_frame_size
+
+        print(f"Initial start_idx: {start_idx}")
+        print(f"Initial stop_idx: {stop_idx}")
+        
+        all_sensor_frames: List[FlashSensorFrame] = []
+        sensor_frame_dicts = []
+        prev_frame_bytes = bytearray(512)
         while stop_idx < FLASH_SIZE:
-            curr_frame_bytes = sensor_frame_bytes[start_idx:stop_idx]
+            curr_frame_bytes = flash_bytes[start_idx:stop_idx]
+            print(curr_frame_bytes)
+
             curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
-            # iterate through the values and put into Data objects
-            value_idx = 0
-            for i, bit in enumerate(str(enabled_data)):
-                if bit == "0": continue
+            curr_sensor_frame = {}
+            for name, value in zip(sensor_frame_names, curr_frame_values):
+                curr_sensor_frame[name] = value
+                print(f"{name} : {value}")
+            
+            start_idx += sensor_frame_size
+            stop_idx += sensor_frame_size
 
-                data = enabled_data.datas[i]
-                if data.bit == "0": continue
+            all_sensor_frames.append(FlashSensorFrame(curr_sensor_frame))
+            sensor_frame_dicts.append(curr_sensor_frame)
 
-                flash_data = FlashData(data_name=data.name)
-                for sensor in data.sensors:
-                    flash_data.values[sensor] = curr_frame_values[value_idx]
-                    value_idx += 1
-                all_flash_data.append(flash_data)
+            if prev_frame_bytes == curr_frame_bytes: 
+                print("Two duplicate frames, likely reading cleared flash memory")
+                break
+            prev_frame_bytes = curr_frame_bytes
+            print("--------------------")
 
-            start_idx += self.sensor_frame_size
-            stop_idx += self.sensor_frame_size
+        if extract_to_file:
+            with open("output/flash_extract.json", "w") as f:
+                json.dump(sensor_frame_dicts, f, indent=4)
 
-        return all_flash_data
+        return all_sensor_frames
