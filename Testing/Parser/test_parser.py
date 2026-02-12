@@ -4,15 +4,15 @@ from SerialController import SerialObj
 def test_preset():
     appa_feature_bitmask = create_configs.appa_feature_bitmask()
     appa_data_bitmask = create_configs.appa_data_bitmask()
+    appa_preset_config = create_configs.appa_preset_config()
 
-    appa_preset_config = PresetConfig(
-        enabled_features=appa_feature_bitmask,
-        enabled_data=appa_data_bitmask
+    appa_preset = Preset(
+        enabled_features=appa_feature_bitmask, 
+        enabled_data=appa_data_bitmask,
+        config=appa_preset_config
     )
 
-    appa_preset = Preset(config_settings=appa_preset_config)
-
-    print(appa_preset)
+    print(appa_preset.pretty_print(indent=1))
 
 def test_flash_extract():
     serial_connection = SerialObj()
@@ -21,13 +21,13 @@ def test_flash_extract():
 
     appa_feature_bitmask = create_configs.appa_feature_bitmask()
     appa_data_bitmask = create_configs.appa_data_bitmask()
+    appa_preset_config = create_configs.appa_preset_config()
 
-    appa_preset_config = PresetConfig(
-        enabled_features=appa_feature_bitmask,
-        enabled_data=appa_data_bitmask
+    appa_preset = Preset(
+        enabled_features=appa_feature_bitmask, 
+        enabled_data=appa_data_bitmask,
+        config=appa_preset_config
     )
-
-    appa_preset = Preset(config_settings=appa_preset_config)
 
     appa_parser = Parser(preset=appa_preset)
     
@@ -42,4 +42,3 @@ def test_flash_extract():
 
 if __name__ == "__main__":
     test_preset()
-    test_flash_extract()

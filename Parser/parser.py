@@ -27,7 +27,7 @@ class Parser:
         self._compute_frames()
 
     def _compute_frames(self):
-        enabled_data = self.preset.config_settings.enabled_data
+        enabled_data = self.preset.enabled_data
 
         sensor_count = 0
         for i, bit in enumerate(str(enabled_data)):
@@ -54,6 +54,20 @@ class Parser:
         self.preset_frame_size = self.sensor_frame_size
         while self.preset_frame_size < self.preset.size + 2: # TODO confirm + 2
             self.preset_frame_size += self.sensor_frame_size
+
+    def _parse_preset(self, preset_bytes: bytes) -> None:
+        # make a blank preset or expected preset that serves as the format to place into 
+
+        # hold checksum 
+        # parse feature bitmask to feature objects
+        # parser data bitmask to data objects
+
+        # place data and offset information into their objects 
+
+        # verify checksum
+        # create preset_config object with obtained bitmasks
+        
+        return 
     
     def download_preset(self) -> FlashData:
         return FlashData(
@@ -111,7 +125,7 @@ class Parser:
         start_idx = self.num_preset_frames * self.sensor_frame_size
         stop_idx = start_idx + self.sensor_frame_size
 
-        enabled_data = self.preset.config_settings.enabled_data
+        enabled_data = self.preset.enabled_data
         while stop_idx < FLASH_SIZE:
             curr_frame_bytes = sensor_frame_bytes[start_idx:stop_idx]
             curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
