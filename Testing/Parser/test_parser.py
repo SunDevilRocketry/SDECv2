@@ -10,7 +10,7 @@ def test_preset():
 
 def test_flash_extract():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM6", 921600, 5)
+    serial_connection.init_comport("COM6", 921600, 1)
     serial_connection.open_comport()
 
     appa_feature_bitmask = create_configs.appa_feature_bitmask()
@@ -25,12 +25,7 @@ def test_flash_extract():
 
     appa_parser = Parser(preset=appa_preset)
     
-    all_flash_data = appa_parser.flash_extract(serial_connection)
-
-    for flash_data in all_flash_data:
-        print(f"{flash_data.data_name}:")    
-        for sensor, value in flash_data.values.items():
-            print(f"  {sensor.short_name}: {value}")    
+    all_flash_data = appa_parser.flash_extract(serial_connection, True)
 
     serial_connection.close_comport()
 
