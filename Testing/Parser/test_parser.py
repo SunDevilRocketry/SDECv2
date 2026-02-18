@@ -1,4 +1,4 @@
-from Parser import Parser, Preset, PresetConfig, DataBitmask, FeatureBitmask, create_configs
+from Parser import Parser, PresetConfig, DataBitmask, FeatureBitmask, create_configs
 from SerialController import SerialObj
 
 def test_preset():
@@ -6,13 +6,7 @@ def test_preset():
     appa_data_bitmask = create_configs.appa_data_bitmask()
     appa_preset_config = create_configs.appa_preset_config()
 
-    appa_preset = Preset(
-        enabled_features=appa_feature_bitmask, 
-        enabled_data=appa_data_bitmask,
-        config=appa_preset_config
-    )
-
-    print(appa_preset.pretty_print(indent=1))
+    print(appa_preset_config.pretty_print())
 
 def test_flash_extract():
     serial_connection = SerialObj()

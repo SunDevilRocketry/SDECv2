@@ -1,11 +1,14 @@
 import builtins
+import json
 import struct
 
 from .bitmask import FeatureBitmask, DataBitmask
+from .create_configs import appa_feature_bitmask_from_bits, appa_data_bitmask_from_bits
 from .data import Data
 from .flash_data import FlashData
 from .feature import Feature
-from .preset import Preset
+from .preset_config import PresetConfig, ConfigEntry
+from .preset_data import PresetData, DataEntry
 from .toggle import Toggle
 from SerialController import SerialObj
 from typing import List
@@ -13,10 +16,102 @@ from typing import List
 FLASH_SIZE = 524288
 
 class Parser:
-    def __init__(self, preset: Preset):
-        self.preset = preset
-        self.preset.size = 88 # TODO preset will just calc this itself when its done
-        self.reset()
+    def __init__(self, preset_config: PresetConfig, preset_data: PresetData | None):
+        self.preset_config = preset_config
+        self.preset_data: PresetData | None = None
+
+    @classmethod
+    def from_file(cls, path: str) -> "Parser":
+        with open(path, "r") as f:
+            json_input = json.load(f)
+
+        if json_input is None:
+            raise ValueError("Error: No JSON found")
+
+        feature_bitmask_json: str = json_input.get("Feature Bitmask")
+        if feature_bitmask_json == "": raise ValueError("Error: No Feature Bitmask")
+
+        data_bitmask_json: str = json_input.get("Data Bitmask")
+        if data_bitmask_json == "": raise ValueError("Error: No Data Bitmask")
+
+        config_data_json: list[dict] = json_input.get("Config Data", [])
+        if config_data_json == []: raise ValueError("Error: No Config Data")
+
+        imu_data_json: list[dict] = json_input.get("IMU Data", [])
+        if imu_data_json == []: raise ValueError("Error: No IMU Data")
+
+        baro_data_json: list[dict] = json_input.get("Baro Data", [])
+        if baro_data_json == []: raise ValueError("Error: No Baro Data")
+
+        servo_data_json: list[dict] = json_input.get("Servo Data", [])
+        if servo_data_json == []: raise ValueError("Error: No Servo Data")
+
+        def make_entries(entries: list[dict]):
+            config_entries: list[ConfigEntry] = []
+            data_entries: list[DataEntry] = []
+
+            for entry in entries:
+                name = str(entry.get("Name"))
+                if name == "": raise ValueError("Error: No Entry name")
+
+                size = entry.get("Size", 0)
+                if size == 0: raise ValueError("Error: No Entry size")
+                size = int(size)
+                
+                data_type = entry.get("Data Type")
+                match data_type:
+                    case "int": data_type = int
+                    case "float": data_type = float
+                    case _: raise ValueError("Error: No or invalid Entry data type") 
+                
+                value = entry.get("Value", 0)
+                if value == 0: raise ValueError("Error: No Entry value")
+                match data_type:
+                    case builtins.int: value = int(value)
+                    case builtins.float: value = float(value)
+                    case _: raise ValueError("Error: Invalid Entry data type")
+                
+                config_entries.append(
+                    ConfigEntry(
+                        name=name,
+                        size=size,
+                        data_type=data_type
+                    )
+                )
+
+                data_entries.append(
+                    DataEntry(
+                        name=name,
+                        size=size,
+                        data_type=data_type,
+                        value=value
+                    )
+                )
+
+            return config_entries, data_entries
+
+        data_config, config_data = make_entries(config_data_json)
+        imu_config, imu_data = make_entries(imu_data_json)
+        baro_config, baro_data = make_entries(baro_data_json)
+        servo_config, servo_data = make_entries(servo_data_json)
+
+        preset_config = PresetConfig(
+            data_config=data_config,
+            imu_config=imu_config,
+            baro_config=baro_config,
+            servo_config=servo_config
+        )
+
+        preset_data = PresetData(
+            feature_bitmask=appa_feature_bitmask_from_bits(feature_bitmask_json),
+            data_bitmask=appa_data_bitmask_from_bits(data_bitmask_json),
+            config_data=config_data,
+            imu_data=imu_data,
+            baro_data=baro_data,
+            servo_data=servo_data
+        )
+
+        return cls(preset_config, preset_data)
 
     def reset(self):
         self.num_preset_frames = 0
@@ -55,31 +150,76 @@ class Parser:
         while self.preset_frame_size < self.preset.size + 2: # TODO confirm + 2
             self.preset_frame_size += self.sensor_frame_size
 
-    def _parse_preset(self, preset_bytes: bytes) -> None:
-        # make a blank preset or expected preset that serves as the format to place into 
+    def _parse_preset(self, preset_bytes: bytes) -> PresetData:
+        struct_format = self.preset_config.struct_format
+        if struct.calcsize(struct_format) != len(preset_bytes): print("Error: Preset Config size does not match preset bytes")
 
-        # hold checksum 
-        # parse feature bitmask to feature objects
-        # parser data bitmask to data objects
+        vals = struct.unpack(struct_format, preset_bytes)[0]
 
-        # place data and offset information into their objects 
+        checksum = vals[0]
 
-        # verify checksum
-        # create preset_config object with obtained bitmasks
+        # Gets 8 least significant bits of 4 byte int as a string
+        feature_bitmask = appa_feature_bitmask_from_bits(format(vals[1] & 0xFF, "08b"))
+        data_bitmask = appa_data_bitmask_from_bits(format(vals[2] & 0xFF, "08b")) 
+
+        vals = vals[3:]  
+        def set_data_entries(vals_idx: int, config_entries: list[ConfigEntry]) -> list[DataEntry]:
+            data_entries: list[DataEntry] = []
+            
+            for entry in config_entries:
+                val = vals[vals_idx]
+                data_entries.append(
+                    DataEntry(
+                        name=entry.name,
+                        size=entry.size,
+                        data_type=entry.data_type,
+                        value=val
+                    )
+                )
+                vals_idx += 1
+
+            return data_entries
         
-        return 
+        config_data = set_data_entries(0, self.preset_config.data_config)
+        vals_idx = len(config_data)
+        
+        imu_data = set_data_entries(vals_idx, self.preset_config.imu_config)
+        vals_idx += len(imu_data)
+
+        baro_data = set_data_entries(vals_idx, self.preset_config.baro_config)
+        vals_idx += len(baro_data)
+
+        servo_data = set_data_entries(vals_idx, self.preset_config.servo_config)
+
+        preset_data = PresetData(
+            feature_bitmask=feature_bitmask,
+            data_bitmask=data_bitmask,
+            config_data=config_data,
+            imu_data=imu_data,
+            baro_data=baro_data,
+            servo_data=servo_data
+        )
+
+        if checksum != preset_data.checksum:
+            print("Erorr: Received checksum does not match calculated checksum")
+
+        return preset_data
     
     def download_preset(self) -> FlashData:
+        # Set self.downloaded_preset
         return FlashData(
             data_name=""
         )
     
-    def verify_preset(self) -> FlashData:
+    def verify_preset(self) -> FlashData:        
+        self.download_preset()
+        # compare checksums 
+
         return FlashData(
             data_name=""
         )
     
-    def upload_preset(self) -> FlashData:    
+    def upload_preset(self) -> FlashData:
         return FlashData(
             data_name=""
         )

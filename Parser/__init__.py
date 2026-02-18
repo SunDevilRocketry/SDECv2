@@ -2,8 +2,8 @@ from .data import Data
 from .bitmask import FeatureBitmask, DataBitmask
 from .flash_data import FlashData
 from .feature import Feature
-from .preset import Preset
-from .preset_config import ConfigData, ImuPreset, BaroPreset, ServoPreset, PresetConfig
+from .preset_config import PresetConfig
+from .preset_data import PresetData
 from .parser import Parser
 
-__all__ = ["Data", "DataBitmask", "Feature", "FeatureBitmask", "FlashData", "Preset", "PresetConfig", "ConfigData", "ImuPreset", "BaroPreset", "ServoPreset", "Parser"]
+__all__ = ["Data", "DataBitmask", "Feature", "FeatureBitmask", "FlashData", "PresetConfig", "PresetData", "Parser"]

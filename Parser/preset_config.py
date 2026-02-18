@@ -1,103 +1,65 @@
 import builtins
-
-from .bitmask import FeatureBitmask, DataBitmask
-from BaseController import BaseSensor
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import List
-
-# Prest entries
-@dataclass
-class PresetDataBitmask:
-    size: int = 4
-    data_type: type = int
-
-    def __str__(self):
-        return "Data Bitmask"
+from dataclasses import dataclass
 
 @dataclass
-class PresetFeatureBitmask:
-    size: int = 4
-    data_type: type = int
-
-    def __str__(self):
-        return "Feature Bitmask"
-
-@dataclass
-class PresetChecksum:
-    size: int = 4
-    data_type: type = int
-
-    def __str__(self):
-        return "Checksum"
-
-@dataclass
-class PresetEntry:
+class ConfigEntry:
     name: str
     size: int
     data_type: type
 
     def __str__(self):
-        return f"Name: {self.name} | Size: {self.size} | Data Type: {self.data_type}"
+        spaces = " " * (22 - len(self.name))
+        return f"Name: {self.name} {spaces} | Size: {self.size} | Data Type: {self.data_type}"
 
-# Preset fields
-@dataclass
-class ConfigData:
-    checksum: PresetChecksum
-    feature_bitmask: PresetFeatureBitmask
-    data_bitmask: PresetDataBitmask
-    entries: list[PresetEntry]
-
-    def pretty_print(self, indent=0):
-        spaces = " " * indent
-        entries_string = "\n".join(spaces + str(entry) for entry in self.entries)
-        return (
-            f"{spaces}Checksum\n" +
-            f"{spaces}Feature Bitmask\n" +
-            f"{spaces}Data Bitmask\n" +
-            f"{entries_string}\n"
-        )
-
-    def __str__(self):
-        return self.pretty_print()
-
-@dataclass
-class ImuPreset:
-    entries: list[PresetEntry]
-
-    def __str__(self):
-        return "\n".join(str(entry) for entry in self.entries)
-
-@dataclass
-class BaroPreset:
-    entries: list[PresetEntry]
-
-    def __str__(self):
-        return "\n".join(str(entry) for entry in self.entries)
-
-@dataclass 
-class ServoPreset:
-    entries: list[PresetEntry]
-
-    def __str__(self):
-        return "\n".join(str(entry) for entry in self.entries)
-
-# Final preset class
 @dataclass
 class PresetConfig:
-    config_data: ConfigData
-    imu_preset: ImuPreset
-    baro_preset: BaroPreset
-    servo_preset: ServoPreset
+    data_config: list[ConfigEntry]
+    imu_config: list[ConfigEntry]
+    baro_config: list[ConfigEntry]
+    servo_config: list[ConfigEntry]
+
+    struct_format: str = "<"
 
     def pretty_print(self, indent=0):
-        spaces = " " * indent
+        spaces = "  " * (1 + indent)
         return (
-            f"{spaces}Config Data: \n{self.config_data.pretty_print(3)}\n" +
-            f"{spaces}IMU Preset: {self.imu_preset}\n" +
-            f"{spaces}Baro Preset: {self.baro_preset}\n" +
-            f"{spaces}Servo Preset: {self.servo_preset}\n"
+            "Preset Config {\n" +
+            f"{spaces}Config Data: \n{"\n".join(spaces + "  " + str(entry) for entry in self.data_config)}\n" +
+            f"{spaces}IMU Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.imu_config)}\n" +
+            f"{spaces}Baro Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.baro_config)}\n" +
+            f"{spaces}Servo Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.servo_config)}\n"
+            "}"
         )
 
     def __str__(self):
         return self.pretty_print()
+    
+    def __post_init__(self):
+        self.struct_format += "i" # Checksum
+        self.struct_format += "i" # Feature Bitmask
+        self.struct_format += "i" # Data Bitmask 
+
+        def add_entries(entries: list[ConfigEntry]):
+            for entry in entries:
+                match entry.data_type:
+                    case builtins.float: 
+                        self.struct_format += "f"
+                    case builtins.int:
+                        match entry.size:
+                            case 1: self.struct_format += "b"
+                            case 2: self.struct_format += "h"
+                            case 4: self.struct_format += "i"
+                
+        add_entries(self.data_config)
+        add_entries(self.imu_config)
+        add_entries(self.baro_config)
+        add_entries(self.servo_config)
+
+    def get_entries(self) -> list[ConfigEntry]:
+        entries = []
+        entries.extend(self.data_config)
+        entries.extend(self.imu_config)
+        entries.extend(self.baro_config)
+        entries.extend(self.servo_config)
+
+        return entries
