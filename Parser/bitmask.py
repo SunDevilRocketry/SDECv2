@@ -10,7 +10,8 @@ class FeatureBitmask():
     features: List[Feature] = field(default_factory=list)
 
     def __str__(self):
-        return "".join(feature.bit() for feature in reversed(self.features))
+        bits = "".join(feature.bit() for feature in reversed(self.features))
+        return bits.zfill(8)
     
     def to_bytes(self) -> bytes:
         return int(self.__str__(), 2).to_bytes(1, byteorder="big")
@@ -21,7 +22,8 @@ class DataBitmask():
     datas: List[Data] = field(default_factory=list)
 
     def __str__(self):
-        return "".join(data.bit() for data in reversed(self.datas))
+        bits = "".join(data.bit() for data in reversed(self.datas))
+        return bits.zfill(8)
     
     def to_bytes(self) -> bytes:
         return int(self.__str__(), 2).to_bytes(1, byteorder="big")

@@ -63,14 +63,14 @@ class PresetData:
         add_entries(self.baro_data)
         add_entries(self.servo_data)
 
-        object.__setattr__(self, "crc", zlib.crc32(payload) & 0xFFFFFFFF)
+        object.__setattr__(self, "checksum", zlib.crc32(payload) & 0xFFFFFFFF)
 
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
         def format_entry(entry: DataEntry):
             return {
                 "Name": entry.name,
                 "Size": entry.size,
-                "Data Type": entry.data_type,
+                "Data Type": "int" if entry.data_type is builtins.int else "float",
                 "Value": entry.value
             }
 
@@ -84,4 +84,4 @@ class PresetData:
         }
 
         with open(path, "w") as f:
-            json.dump(json_output, f)
+            json.dump(json_output, f, indent=4)

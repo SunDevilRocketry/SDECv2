@@ -116,8 +116,8 @@ def appa_data_bitmask() -> DataBitmask:
 
 def appa_feature_bitmask_from_bits(bits: str) -> FeatureBitmask:
     appa_features = appa_feature_bitmask().features
-    if len(bits) != len(appa_features):
-        raise ValueError("Bitmask length does not match feature list")
+    if len(bits) != 8:
+        raise ValueError(f"Bitmask {bits} is not length 8")
     
     features = []
     for bit, feature in zip(reversed(bits), appa_features):
@@ -132,8 +132,8 @@ def appa_feature_bitmask_from_bits(bits: str) -> FeatureBitmask:
 
 def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
     appa_datas = appa_data_bitmask().datas
-    if len(bits) != len(appa_datas):
-        raise ValueError("Bitmask length does not match feature list")
+    if len(bits) != 8:
+        raise ValueError(f"Bitmask {bits} is not length 8")
     
     datas = []
     for bit, data in zip(reversed(bits), appa_datas):

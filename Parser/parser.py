@@ -20,6 +20,8 @@ class Parser:
         self.preset_config = preset_config
         self.preset_data: PresetData | None = None
 
+        self.sensor_struct_format = ">"
+
     @classmethod
     def from_file(cls, path: str) -> "Parser":
         with open(path, "r") as f:
@@ -113,17 +115,14 @@ class Parser:
 
         return cls(preset_config, preset_data)
 
-    def reset(self):
-        self.sensor_struct_format = ">"
-        self._compute_frames()
+    def _compute_frames(self, bits: str):
+        enabled_data = appa_data_bitmask_from_bits(bits)
 
-    def _compute_frames(self):
-        enabled_data = self.preset.enabled_data
-
+        datas_idx = 0
         for i, bit in enumerate(str(enabled_data)):
             if bit == "0": continue
 
-            data = enabled_data.datas[i]
+            data = enabled_data.datas[datas_idx]
             for sensor in data.sensors:
                 match sensor.data_type:
                     case builtins.float:
@@ -138,15 +137,13 @@ class Parser:
                     case builtins.str:
                         self.sensor_struct_format += "c"
 
-        self.preset_frame_size = self.sensor_frame_size
-        while self.preset_frame_size < self.preset.size + 2: # TODO confirm + 2
-            self.preset_frame_size += self.sensor_frame_size
+            datas_idx += 1
 
     def _parse_preset(self, preset_bytes: bytes) -> PresetData:
         struct_format = self.preset_config.struct_format
         if struct.calcsize(struct_format) != len(preset_bytes): print("Error: Preset Config size does not match preset bytes")
 
-        vals = struct.unpack(struct_format, preset_bytes)[0]
+        vals = struct.unpack(struct_format, preset_bytes)
 
         checksum = vals[0]
 
@@ -195,6 +192,7 @@ class Parser:
         if checksum != preset_data.checksum:
             print("Erorr: Received checksum does not match calculated checksum")
 
+        self.preset_data = preset_data # TODO maybe remove
         return preset_data
     
     def download_preset(self) -> FlashSensorFrame:
@@ -206,22 +204,11 @@ class Parser:
     def upload_preset(self) -> FlashSensorFrame:
         return FlashSensorFrame()
     
-    def flash_extract(self, serial_connection: SerialObj, extract_to_file: bool) -> List[FlashSensorFrame]:
+    def flash_extract(self, serial_connection: SerialObj, store_preset: bool, store_data: bool) -> List[FlashSensorFrame]:
         # flash opcode
         serial_connection.send(b"\x22")
         # flash extract subcommand code
         serial_connection.send(b"\xC0")
-
-        # extract the number of frames in bitmask from flash (4096 blocks max)
-        # each frame reads the amount of bytes the size of the frame
-        # add these to the overall bytes of flash
-        # num_frames = FLASH_SIZE // self.sensor_frame_size
-        # num_frames = math.ceil(FLASH_SIZE / 512)
-        # print(f"Num frames: {num_frames}")
-        # print(f"num_preset_frames: {self.num_preset_frames}")
-        # print(f"preset_frame_size: {self.preset_frame_size}")
-        # print(f"num_sensor_frames: {self.num_sensor_frames}")
-        # print(f"sensor_frame_size: {self.sensor_frame_size}")
 
         num_frames = FLASH_SIZE // 512
         print(f"Num frames: {num_frames}")
@@ -245,31 +232,31 @@ class Parser:
         # receive status byte
         serial_connection.read()
 
-        # get struct format from config preset
+        preset_size = struct.calcsize(self.preset_config.struct_format)
+        preset_bytes = flash_bytes[2:preset_size + 2]
+        
+        self._parse_preset(preset_bytes)
+        
+        if self.preset_data is None: raise ValueError("Erorr: Failed to parse preset")
 
-        # parse the bytes, using the presets struct format
-        preset_bytes = flash_bytes[2:self.preset.size + 2]
-        # TODO parse_preset()
-        # TODO this should create a parser object for use in the rest of flash extract
-        
-        print("preset bytes:")
-        print(preset_bytes)
-        print("*********")
-        
-        # calculate frame size and num preset frames from preset data bitmask
-        # use the size of the preset data bitmask as the sensor frame size
-        # num preset frames is how many preset frames fit in the data size???
+        if store_preset: self.preset_data.save_preset()
+            
+        self._compute_frames(str(self.preset_data.data_bitmask))
+
         sensor_frame_names = []
-        enabled_data = self.preset.config_settings.enabled_data
-        for i, bit in enumerate(str(enabled_data)):
+        enabled_data = appa_data_bitmask_from_bits(str(self.preset_data.data_bitmask))
+        
+        data_idx = 0
+        for bit in str(enabled_data):
             if bit == "0": continue
-            data = enabled_data.datas[i]
+            data = enabled_data.datas[data_idx]
             for sensor in data.sensors: sensor_frame_names.append(sensor.name)
+            data_idx += 1
         
         sensor_frame_size = struct.calcsize(self.sensor_struct_format)
         print(f"Sensor Frame Size: {sensor_frame_size}")
 
-        start_idx = self.preset.size + 2
+        start_idx = preset_size + 2
         stop_idx = start_idx + sensor_frame_size
 
         print(f"Initial start_idx: {start_idx}")
@@ -295,13 +282,13 @@ class Parser:
             sensor_frame_dicts.append(curr_sensor_frame)
 
             if prev_frame_bytes == curr_frame_bytes: 
-                print("Two duplicate frames, likely reading cleared flash memory")
+                print("Two duplicate frames, likely reading cleared flash memory, breaking")
                 break
             prev_frame_bytes = curr_frame_bytes
             print("--------------------")
 
-        if extract_to_file:
-            with open("output/flash_extract.json", "w") as f:
+        if store_data:
+            with open("a_output/flash_extract.json", "w") as f:
                 json.dump(sensor_frame_dicts, f, indent=4)
 
         return all_sensor_frames

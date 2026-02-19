@@ -13,21 +13,15 @@ def test_flash_extract():
     serial_connection.init_comport("COM6", 921600, 1)
     serial_connection.open_comport()
 
-    appa_feature_bitmask = create_configs.appa_feature_bitmask()
-    appa_data_bitmask = create_configs.appa_data_bitmask()
     appa_preset_config = create_configs.appa_preset_config()
-
-    appa_preset = Preset(
-        enabled_features=appa_feature_bitmask, 
-        enabled_data=appa_data_bitmask,
-        config=appa_preset_config
+    appa_parser = Parser(
+        preset_config=appa_preset_config,
+        preset_data=None
     )
-
-    appa_parser = Parser(preset=appa_preset)
     
-    all_flash_data = appa_parser.flash_extract(serial_connection, True)
+    all_flash_data = appa_parser.flash_extract(serial_connection, store_preset=True, store_data=True)
 
     serial_connection.close_comport()
 
 if __name__ == "__main__":
-    test_preset()
+    test_flash_extract()
