@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 
-@dataclass
+@dataclass(frozen=True)
 class BaseSensor:
     short_name: str
     name: str

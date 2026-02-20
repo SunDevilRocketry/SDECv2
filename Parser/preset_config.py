@@ -1,46 +1,56 @@
 import builtins
-
-from .bitmask import Bitmask
-from ..BaseController import BaseSensor
-from dataclasses import dataclass, field
-from typing import List
+from dataclasses import dataclass
 
 @dataclass
-class PresetConfig():
-    enabled_flags: Bitmask
-    enabled_data: Bitmask
-    sensors: List[BaseSensor] = field(init=False)
-    struct_format: str = ">"
-    size: int = 0
+class ConfigEntry:
+    name: str
+    size: int
+    data_type: type
 
+    def __str__(self):
+        spaces = " " * (22 - len(self.name))
+        return f"Name: {self.name} {spaces} | Size: {self.size} | Data Type: {self.data_type}"
+
+@dataclass
+class PresetConfig:
+    data_config: list[ConfigEntry]
+    imu_config: list[ConfigEntry]
+    baro_config: list[ConfigEntry]
+    servo_config: list[ConfigEntry]
+
+    struct_format: str = "<"
+
+    def pretty_print(self, indent=0):
+        spaces = "  " * (1 + indent)
+        return (
+            "Preset Config {\n" +
+            f"{spaces}Config Data: \n{"\n".join(spaces + "  " + str(entry) for entry in self.data_config)}\n" +
+            f"{spaces}IMU Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.imu_config)}\n" +
+            f"{spaces}Baro Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.baro_config)}\n" +
+            f"{spaces}Servo Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.servo_config)}\n"
+            "}"
+        )
+
+    def __str__(self):
+        return self.pretty_print()
+    
     def __post_init__(self):
-        self.sensors = []
-        self.struct_format = ""
+        self.struct_format += "i" # Checksum
+        self.struct_format += "i" # Feature Bitmask
+        self.struct_format += "i" # Data Bitmask 
 
-        for i, bit in enumerate(str(self.enabled_flags)):
-            if bit == "0": continue
-
-            feature = self.enabled_flags.features[i]
-
-            for sensor in feature.sensors:
-                self.sensors.append(sensor)
-                self.size += sensor.size
-
-                match sensor.data_type:
-                    case builtins.float:
+        def add_entries(entries: list[ConfigEntry]):
+            for entry in entries:
+                match entry.data_type:
+                    case builtins.float: 
                         self.struct_format += "f"
                     case builtins.int:
-                        match sensor.size:
+                        match entry.size:
                             case 1: self.struct_format += "b"
                             case 2: self.struct_format += "h"
-                            case 4: self.struct_format += "i"  
-
-    def __str__(self) -> str:
-        return (
-            "Preset Config:{" +
-            "\n Enabled Flags Bitmask: {}".format(self.enabled_flags) +
-            "\n Enabled Data Bitmask: {}".format(self.enabled_data) +
-            "\n Sensors: {}".format(self.sensors) + 
-            "\n Struct Format: {}".format(self.struct_format) +
-            "\n}"
-        )
+                            case 4: self.struct_format += "i"
+                
+        add_entries(self.data_config)
+        add_entries(self.imu_config)
+        add_entries(self.baro_config)
+        add_entries(self.servo_config)
