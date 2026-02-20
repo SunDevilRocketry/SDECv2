@@ -1,7 +1,5 @@
 from .toggle import Toggle
-from ..BaseController import BaseSensor
 from dataclasses import dataclass
-from typing import List
 
 @dataclass
 class Feature:
