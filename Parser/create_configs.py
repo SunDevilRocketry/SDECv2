@@ -3,7 +3,7 @@ from .data import Data
 from .feature import Feature
 from .preset_config import PresetConfig, ConfigEntry
 from .toggle import Toggle
-from BaseController import BaseSensor
+from ..BaseController import BaseSensor
 
 def appa_feature_bitmask() -> FeatureBitmask:
     features = [
