@@ -66,6 +66,16 @@ class PresetData:
         object.__setattr__(self, "checksum", zlib.crc32(payload) & 0xFFFFFFFF)
 
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
+        feature_bitmask = {}
+        feature_bitmask["Bitmask"] = str(self.feature_bitmask)
+        for feature in self.feature_bitmask.features:
+            feature_bitmask[feature.name] = True if feature.bit() == "1" else False
+
+        data_bitmask = {}
+        data_bitmask["Bitmask"] = str(self.data_bitmask)
+        for data in self.data_bitmask.datas:
+            data_bitmask[data.name] = True if data.bit() == "1" else False
+        
         def format_entry(entry: DataEntry):
             return {
                 "Name": entry.name,
@@ -75,8 +85,8 @@ class PresetData:
             }
 
         json_output = {
-            "Feature Bitmask": str(self.feature_bitmask),
-            "Data Bitmask": str(self.data_bitmask),
+            "Feature Bitmask": feature_bitmask,
+            "Data Bitmask": data_bitmask,
             "Config Data": [format_entry(entry) for entry in self.config_data],
             "IMU Data": [format_entry(entry) for entry in self.imu_data],
             "Baro Data": [format_entry(entry) for entry in self.baro_data],

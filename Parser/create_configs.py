@@ -13,19 +13,19 @@ def appa_feature_bitmask() -> FeatureBitmask:
         ),
         Feature(
             name="Dual Deploy",
-            value=Toggle.DISABLED
+            value=Toggle.ENABLED
         ),
         Feature(
             name="Active Roll Control",
-            value=Toggle.DISABLED
+            value=Toggle.ENABLED
         ),
         Feature(
             name="Active Pitch Yaw Control",
-            value=Toggle.DISABLED
+            value=Toggle.ENABLED
         ),
         Feature(
             name="Wireless Transmission",
-            value=Toggle.DISABLED
+            value=Toggle.ENABLED
         ),
         Feature(
             name="Launch Detect Baro",
@@ -37,7 +37,7 @@ def appa_feature_bitmask() -> FeatureBitmask:
         ),
         Feature(
             name="GPS",
-            value=Toggle.DISABLED
+            value=Toggle.ENABLED
         )
     ]
 
@@ -105,7 +105,7 @@ def appa_data_bitmask() -> DataBitmask:
         ),
         Data(
             name="canard",
-            value=Toggle.DISABLED,
+            value=Toggle.ENABLED,
             sensors=[
                 BaseSensor("feedback", "Canard Feedback", 4, float, "")
             ]
@@ -128,7 +128,7 @@ def appa_feature_bitmask_from_bits(bits: str) -> FeatureBitmask:
             )
         )
 
-    return FeatureBitmask(features=features)
+    return FeatureBitmask(bitmask=bits, features=features)
 
 def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
     appa_datas = appa_data_bitmask().datas
@@ -145,7 +145,7 @@ def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
             )
         )
 
-    return DataBitmask(datas=datas)
+    return DataBitmask(bitmask=bits, datas=datas)
 
 def appa_preset_config() -> PresetConfig:
     return PresetConfig(

@@ -1,5 +1,6 @@
 import builtins
 import json
+import pandas as pd
 import struct
 
 from .bitmask import FeatureBitmask, DataBitmask
@@ -20,7 +21,7 @@ class Parser:
         self.preset_config = preset_config
         self.preset_data: PresetData | None = None
 
-        self.sensor_struct_format = ">"
+        self.sensor_struct_format = "<bbI" # save bit, FC state, time since launch
 
     @classmethod
     def from_file(cls, path: str) -> "Parser":
@@ -30,11 +31,15 @@ class Parser:
         if json_input is None:
             raise ValueError("Error: No JSON found")
 
-        feature_bitmask_json: str = json_input.get("Feature Bitmask")
-        if feature_bitmask_json == "": raise ValueError("Error: No Feature Bitmask")
+        feature_bitmask_json: dict = json_input.get("Feature Bitmask", {})
+        if feature_bitmask_json == {}: raise ValueError("Error: No Feature Bitmask")
+        feature_bitmask = feature_bitmask_json.get("Bitmask", "")
+        if feature_bitmask == "": raise ValueError("Error: No Bitmask in Feature Bitmask")
 
-        data_bitmask_json: str = json_input.get("Data Bitmask")
-        if data_bitmask_json == "": raise ValueError("Error: No Data Bitmask")
+        data_bitmask_json: dict = json_input.get("Data Bitmask", {})
+        if data_bitmask_json == {}: raise ValueError("Error: No Data Bitmask")
+        data_bitmask = data_bitmask_json.get("Bitmask", "")
+        if data_bitmask == "": raise ValueError("Error: No Bitmask in Data Bitmask")
 
         config_data_json: list[dict] = json_input.get("Config Data", [])
         if config_data_json == []: raise ValueError("Error: No Config Data")
@@ -105,8 +110,8 @@ class Parser:
         )
 
         preset_data = PresetData(
-            feature_bitmask=appa_feature_bitmask_from_bits(feature_bitmask_json),
-            data_bitmask=appa_data_bitmask_from_bits(data_bitmask_json),
+            feature_bitmask=appa_feature_bitmask_from_bits(feature_bitmask),
+            data_bitmask=appa_data_bitmask_from_bits(data_bitmask),
             config_data=config_data,
             imu_data=imu_data,
             baro_data=baro_data,
@@ -119,7 +124,7 @@ class Parser:
         enabled_data = appa_data_bitmask_from_bits(bits)
 
         datas_idx = 0
-        for i, bit in enumerate(str(enabled_data)):
+        for bit in str(enabled_data):
             if bit == "0": continue
 
             data = enabled_data.datas[datas_idx]
@@ -190,7 +195,7 @@ class Parser:
         )
 
         if checksum != preset_data.checksum:
-            print("Erorr: Received checksum does not match calculated checksum")
+            print("Warning: Received checksum does not match calculated checksum")
 
         self.preset_data = preset_data # TODO maybe remove
         return preset_data
@@ -211,7 +216,6 @@ class Parser:
         serial_connection.send(b"\xC0")
 
         num_frames = FLASH_SIZE // 512
-        print(f"Num frames: {num_frames}")
 
         flash_bytes = bytearray()
         for i in range(num_frames):
@@ -254,26 +258,27 @@ class Parser:
             data_idx += 1
         
         sensor_frame_size = struct.calcsize(self.sensor_struct_format)
-        print(f"Sensor Frame Size: {sensor_frame_size}")
 
-        start_idx = preset_size + 2
+        start_idx = sensor_frame_size
         stop_idx = start_idx + sensor_frame_size
-
-        print(f"Initial start_idx: {start_idx}")
-        print(f"Initial stop_idx: {stop_idx}")
         
         all_sensor_frames: List[FlashSensorFrame] = []
         sensor_frame_dicts = []
-        prev_frame_bytes = bytearray(512)
         while stop_idx < FLASH_SIZE:
             curr_frame_bytes = flash_bytes[start_idx:stop_idx]
-            print(curr_frame_bytes)
 
             curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
-            curr_sensor_frame = {}
+
+            # Parse save bit, flight computer state, and time (set parts of a sensor frame)
+            save_bit = format(curr_frame_values[0] & 0x1, "01b") # Get LSB of the 1 byte 
+            fc_state = curr_frame_values[1]
+            time = curr_frame_values[2] / 1_000
+
+            curr_frame_values = curr_frame_values[3:]
+
+            curr_sensor_frame = {"Save Bit": save_bit, "FC State": fc_state, "Time": time}
             for name, value in zip(sensor_frame_names, curr_frame_values):
                 curr_sensor_frame[name] = value
-                print(f"{name} : {value}")
             
             start_idx += sensor_frame_size
             stop_idx += sensor_frame_size
@@ -281,14 +286,8 @@ class Parser:
             all_sensor_frames.append(FlashSensorFrame(curr_sensor_frame))
             sensor_frame_dicts.append(curr_sensor_frame)
 
-            if prev_frame_bytes == curr_frame_bytes: 
-                print("Two duplicate frames, likely reading cleared flash memory, breaking")
-                break
-            prev_frame_bytes = curr_frame_bytes
-            print("--------------------")
-
         if store_data:
-            with open("a_output/flash_extract.json", "w") as f:
-                json.dump(sensor_frame_dicts, f, indent=4)
+            flash_data = pd.DataFrame(sensor_frame_dicts)
+            flash_data.to_csv("a_output/flash_extract.csv", index=False)
 
         return all_sensor_frames

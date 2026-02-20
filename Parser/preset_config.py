@@ -54,12 +54,3 @@ class PresetConfig:
         add_entries(self.imu_config)
         add_entries(self.baro_config)
         add_entries(self.servo_config)
-
-    def get_entries(self) -> list[ConfigEntry]:
-        entries = []
-        entries.extend(self.data_config)
-        entries.extend(self.imu_config)
-        entries.extend(self.baro_config)
-        entries.extend(self.servo_config)
-
-        return entries
