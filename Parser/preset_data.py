@@ -67,12 +67,10 @@ class PresetData:
 
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
         feature_bitmask = {}
-        feature_bitmask["Bitmask"] = str(self.feature_bitmask)
         for feature in self.feature_bitmask.features:
             feature_bitmask[feature.name] = True if feature.bit() == "1" else False
 
         data_bitmask = {}
-        data_bitmask["Bitmask"] = str(self.data_bitmask)
         for data in self.data_bitmask.datas:
             data_bitmask[data.name] = True if data.bit() == "1" else False
         
@@ -95,3 +93,28 @@ class PresetData:
 
         with open(path, "w") as f:
             json.dump(json_output, f, indent=4)
+
+    def to_bytes(self) -> bytes:
+        data = bytearray()
+
+        data.extend(struct.pack("<I", self.checksum))
+        data.extend(struct.pack("<i", self.feature_bitmask.to_int()))
+        data.extend(struct.pack("<i", self.data_bitmask.to_int()))
+
+        def entries_to_bytes(entries: list[DataEntry]):
+            for entry in entries:
+                match entry.data_type:
+                    case builtins.float:
+                        data.extend(struct.pack("<f", entry.value))
+                    case builtins.int:
+                        match entry.size:
+                            case 1: data.extend(struct.pack("<b", entry.value))
+                            case 2: data.extend(struct.pack("<h", entry.value))
+                            case 4: data.extend(struct.pack("<i", entry.value))
+
+        entries_to_bytes(self.config_data)
+        entries_to_bytes(self.imu_data)
+        entries_to_bytes(self.baro_data)
+        entries_to_bytes(self.servo_data)
+
+        return data

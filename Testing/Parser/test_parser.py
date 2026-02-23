@@ -10,7 +10,7 @@ def test_preset():
 
 def test_flash_extract():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM6", 921600, 1)
+    serial_connection.init_comport("COM5", 921600, 1)
     serial_connection.open_comport()
 
     appa_preset_config = create_configs.appa_preset_config()
@@ -23,5 +23,40 @@ def test_flash_extract():
 
     serial_connection.close_comport()
 
+def test_upload_preset():
+    serial_connection = SerialObj()
+    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.open_comport()
+
+    parser = Parser.upload_preset(serial_connection, path="a_input/to_upload_preset.json")
+
+    serial_connection.close_comport()
+
+def test_download_preset():
+    serial_connection = SerialObj()
+    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.open_comport()
+
+    appa_preset_config = create_configs.appa_preset_config()
+    appa_parser = Parser(
+        preset_config=appa_preset_config,
+        preset_data=None
+    )
+
+    appa_parser.download_preset(serial_connection)
+
+    serial_connection.close_comport()
+
+def test_upload_flash_extract():
+    serial_connection = SerialObj()
+    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.open_comport()
+
+    downoaded_parser = Parser.from_file(path="a_output/downloaded_preset.json")
+    
+    all_flash_data = downoaded_parser.flash_extract(serial_connection, store_preset=True, store_data=True)
+
+    serial_connection.close_comport()
+
 if __name__ == "__main__":
-    test_flash_extract()
+    test_upload_flash_extract()

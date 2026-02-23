@@ -35,7 +35,7 @@ class PresetConfig:
         return self.pretty_print()
     
     def __post_init__(self):
-        self.struct_format += "i" # Checksum
+        self.struct_format += "I" # Checksum
         self.struct_format += "i" # Feature Bitmask
         self.struct_format += "i" # Data Bitmask 
 
