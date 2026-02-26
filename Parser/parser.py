@@ -326,7 +326,7 @@ class Parser:
             curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
 
             # Parse save bit, flight computer state, and time (set parts of a sensor frame)
-            save_bit = format(curr_frame_values[0] & 0x1, "01b") # Get LSB of the 1 byte 
+            save_bit = curr_frame_values[0]
             fc_state = curr_frame_values[1]
             time = curr_frame_values[2] / 1_000
 
