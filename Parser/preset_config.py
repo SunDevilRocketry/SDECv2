@@ -36,8 +36,8 @@ class PresetConfig:
     
     def __post_init__(self):
         self.struct_format += "I" # Checksum
-        self.struct_format += "i" # Feature Bitmask
-        self.struct_format += "i" # Data Bitmask 
+        self.struct_format += "I" # Feature Bitmask
+        self.struct_format += "I" # Data Bitmask 
 
         def add_entries(entries: list[ConfigEntry]):
             for entry in entries:
@@ -46,9 +46,9 @@ class PresetConfig:
                         self.struct_format += "f"
                     case builtins.int:
                         match entry.size:
-                            case 1: self.struct_format += "b"
-                            case 2: self.struct_format += "h"
-                            case 4: self.struct_format += "i"
+                            case 1: self.struct_format += "B"
+                            case 2: self.struct_format += "H"
+                            case 4: self.struct_format += "I"
                 
         add_entries(self.data_config)
         add_entries(self.imu_config)

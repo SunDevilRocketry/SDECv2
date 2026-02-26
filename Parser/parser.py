@@ -204,9 +204,11 @@ class Parser:
         )
 
         if checksum != preset_data.checksum:
-            print("Warning: Received checksum does not match calculated checksum")
+            checksum_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", checksum)) + '"'
+            calculated_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", preset_data.checksum)) + '"'
 
-        #self.preset_data = preset_data # TODO maybe remove
+            print(f"Warning: Received checksum {checksum_print} does not match calculated checksum {calculated_print}")
+
         return preset_data
     
     def download_preset(self, serial_connection: SerialObj, path="a_output/downloaded_preset.json") -> None:
@@ -223,8 +225,24 @@ class Parser:
 
         preset_data.save_preset(path)
     
-    def verify_preset(self) -> FlashSensorFrame:
-        return FlashSensorFrame()
+    def verify_preset(self, serial_connection: SerialObj) -> bool:
+        # preset opcode
+        serial_connection.send(b"\x24")
+        # verify subcommand code
+        serial_connection.send(b"\x03")
+
+        received_checksum = serial_connection.read()
+
+        match received_checksum:
+            case b"\x00":
+                print("Invalid Checksum")
+                return False
+            case b"\x01":
+                print("Valid Checksum")
+                return True
+            case _:
+                print("Unexpected Result")
+                return False
     
     @classmethod
     def upload_preset(cls, serial_connection: SerialObj, path: str="a_input/appa_preset.json") -> "Parser":

@@ -1,7 +1,7 @@
 import builtins
+import crc32c
 import json
 import struct
-import zlib
 from .bitmask import FeatureBitmask, DataBitmask
 from dataclasses import dataclass, field
 
@@ -54,16 +54,16 @@ class PresetData:
                         payload.extend(struct.pack("<f", entry.value))
                     case builtins.int:
                         match entry.size:
-                            case 1: payload.extend(struct.pack("<b", entry.value))
-                            case 2: payload.extend(struct.pack("<h", entry.value))
-                            case 4: payload.extend(struct.pack("<i", entry.value))
+                            case 1: payload.extend(struct.pack("<B", entry.value))
+                            case 2: payload.extend(struct.pack("<H", entry.value))
+                            case 4: payload.extend(struct.pack("<I", entry.value))
                 
         add_entries(self.config_data)
-        add_entries(self.imu_data)
-        add_entries(self.baro_data)
-        add_entries(self.servo_data)
+        # add_entries(self.imu_data)
+        # add_entries(self.baro_data)
+        # add_entries(self.servo_data)
 
-        object.__setattr__(self, "checksum", zlib.crc32(payload) & 0xFFFFFFFF)
+        object.__setattr__(self, "checksum", crc32c.crc32(payload) & 0xFFFFFFFF)
 
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
         feature_bitmask = {}
@@ -98,8 +98,8 @@ class PresetData:
         data = bytearray()
 
         data.extend(struct.pack("<I", self.checksum))
-        data.extend(struct.pack("<i", self.feature_bitmask.to_int()))
-        data.extend(struct.pack("<i", self.data_bitmask.to_int()))
+        data.extend(struct.pack("<I", self.feature_bitmask.to_int()))
+        data.extend(struct.pack("<I", self.data_bitmask.to_int()))
 
         def entries_to_bytes(entries: list[DataEntry]):
             for entry in entries:
@@ -108,13 +108,13 @@ class PresetData:
                         data.extend(struct.pack("<f", entry.value))
                     case builtins.int:
                         match entry.size:
-                            case 1: data.extend(struct.pack("<b", entry.value))
-                            case 2: data.extend(struct.pack("<h", entry.value))
-                            case 4: data.extend(struct.pack("<i", entry.value))
+                            case 1: data.extend(struct.pack("<B", entry.value))
+                            case 2: data.extend(struct.pack("<H", entry.value))
+                            case 4: data.extend(struct.pack("<I", entry.value))
 
         entries_to_bytes(self.config_data)
-        entries_to_bytes(self.imu_data)
-        entries_to_bytes(self.baro_data)
-        entries_to_bytes(self.servo_data)
+        # entries_to_bytes(self.imu_data)
+        # entries_to_bytes(self.baro_data)
+        # entries_to_bytes(self.servo_data)
 
         return data

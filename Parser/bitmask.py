@@ -1,3 +1,5 @@
+import struct
+
 from .data import Data
 from .feature import Feature
 from .toggle import Toggle
@@ -17,7 +19,7 @@ class FeatureBitmask():
         return int(self.__str__(), 2)
 
     def to_bytes(self) -> bytes:
-        return self.to_int().to_bytes(1, byteorder="big")
+        return struct.pack("<I", self.to_int())
 
 @dataclass
 class DataBitmask():
@@ -32,4 +34,4 @@ class DataBitmask():
         return int(self.__str__(), 2)
 
     def to_bytes(self) -> bytes:
-        return self.to_int().to_bytes(1, byteorder="big")
+        return struct.pack("<I", self.to_int())
