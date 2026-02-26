@@ -63,3 +63,37 @@ def flight_computer_rev2_sensors() -> List[Sensor]:
         offset += size
 
     return sensors
+
+def rev2_dashboard_dump_sensors() -> List[Sensor]:
+    sensor_tuples = [
+        (b'\x0A', "accXconv", "Pre-converted Accel X", 4, float, "m/s/s", None),
+        (b'\x0B', "accYconv", "Pre-converted Accel Y", 4, float, "m/s/s", None),
+        (b'\x0C', "accZconv", "Pre-converted Accel Z", 4, float, "m/s/s", None),
+        (b'\x0D', "gyroXconv", "Pre-converted Gyro X", 4, float, "deg/s", None),
+        (b'\x0E', "gyroYconv", "Pre-converted Gyro Y", 4, float, "deg/s", None),
+        (b'\x0F', "gyroZconv", "Pre-converted Gyro Z", 4, float, "deg/s", None),
+
+        (b'\x10', "rollDeg", "Roll Body Angle", 4, float, "deg", None),
+        (b'\x11', "pitchDeg", "Pitch Body Angle", 4, float, "deg", None),
+        (b'\x12', "yawDeg", "Yaw Body Angle", 4, float, "deg", None),
+        (b'\x13', "rollRate", "Roll Body Rate", 4, float, "deg/s", None),
+        (b'\x14', "pitchRate", "Pitch Body Rate", 4, float, "deg/s", None),
+        (b'\x15', "yawRate", "Yaw Body Rate", 4, float, "deg/s", None),
+
+        (b'\x1B', "pres", "Barometric Pressure", 4, float, "kPa", baro_press),
+        (b'\x1C', "temp", "Barometric Temperature", 4, float, "C", None),
+        (b'\x1D', "alt", "Barometric Altitude", 4, float, "m", None),
+        (b'\x1E', "bvelo", "Barometric Velocity", 4, float, "m/s", None),
+
+        (b'\x22', "long", "GPS Longitude (deg)", 4, float, "deg", None),
+        (b'\x23', "lat", "GPS Latitude (deg)", 4, float, "deg", None),
+    ]
+
+    sensors: List[Sensor] = []
+    offset = 0
+
+    for poll_code, short_name, name, size, data_type, unit, conv_func in sensor_tuples:
+        sensors.append(Sensor(short_name, name, size, data_type, unit, conv_func, poll_code, offset))
+        offset += size
+
+    return sensors
