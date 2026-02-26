@@ -1,3 +1,5 @@
+import struct
+
 from .data import Data
 from .feature import Feature
 from .toggle import Toggle
@@ -13,8 +15,11 @@ class FeatureBitmask():
         bits = "".join(feature.bit() for feature in reversed(self.features))
         return bits.zfill(8)
     
+    def to_int(self) -> int:
+        return int(self.__str__(), 2)
+
     def to_bytes(self) -> bytes:
-        return int(self.__str__(), 2).to_bytes(1, byteorder="big")
+        return struct.pack("<I", self.to_int())
 
 @dataclass
 class DataBitmask():
@@ -25,5 +30,8 @@ class DataBitmask():
         bits = "".join(data.bit() for data in reversed(self.datas))
         return bits.zfill(8)
     
+    def to_int(self) -> int:
+        return int(self.__str__(), 2)
+
     def to_bytes(self) -> bytes:
-        return int(self.__str__(), 2).to_bytes(1, byteorder="big")
+        return struct.pack("<I", self.to_int())

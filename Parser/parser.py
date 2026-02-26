@@ -1,5 +1,6 @@
 import builtins
 import json
+import os
 import pandas as pd
 import struct
 
@@ -19,7 +20,7 @@ FLASH_SIZE = 524288
 class Parser:
     def __init__(self, preset_config: PresetConfig, preset_data: PresetData | None):
         self.preset_config = preset_config
-        self.preset_data: PresetData | None = None
+        self.preset_data = preset_data
 
         self.sensor_struct_format = "<bbI" # save bit, FC state, time since launch
 
@@ -33,13 +34,9 @@ class Parser:
 
         feature_bitmask_json: dict = json_input.get("Feature Bitmask", {})
         if feature_bitmask_json == {}: raise ValueError("Error: No Feature Bitmask")
-        feature_bitmask = feature_bitmask_json.get("Bitmask", "")
-        if feature_bitmask == "": raise ValueError("Error: No Bitmask in Feature Bitmask")
 
         data_bitmask_json: dict = json_input.get("Data Bitmask", {})
         if data_bitmask_json == {}: raise ValueError("Error: No Data Bitmask")
-        data_bitmask = data_bitmask_json.get("Bitmask", "")
-        if data_bitmask == "": raise ValueError("Error: No Bitmask in Data Bitmask")
 
         config_data_json: list[dict] = json_input.get("Config Data", [])
         if config_data_json == []: raise ValueError("Error: No Config Data")
@@ -71,8 +68,8 @@ class Parser:
                     case "float": data_type = float
                     case _: raise ValueError("Error: No or invalid Entry data type") 
                 
-                value = entry.get("Value", 0)
-                if value == 0: raise ValueError("Error: No Entry value")
+                value = entry.get("Value", "")
+                if value == "": raise ValueError("Error: No Entry value")
                 match data_type:
                     case builtins.int: value = int(value)
                     case builtins.float: value = float(value)
@@ -96,6 +93,18 @@ class Parser:
                 )
 
             return config_entries, data_entries
+        
+        feature_bitmask = ""
+        for val in feature_bitmask_json.values():
+            bit = "1" if val else "0"
+            feature_bitmask = bit + feature_bitmask
+        feature_bitmask = "0" * (8 - len(feature_bitmask)) + feature_bitmask 
+
+        data_bitmask = ""
+        for val in data_bitmask_json.values():
+            bit = "1" if val else "0"
+            data_bitmask = bit + data_bitmask
+        data_bitmask = "0" * (8 - len(data_bitmask)) + data_bitmask
 
         data_config, config_data = make_entries(config_data_json)
         imu_config, imu_data = make_entries(imu_data_json)
@@ -195,19 +204,65 @@ class Parser:
         )
 
         if checksum != preset_data.checksum:
-            print("Warning: Received checksum does not match calculated checksum")
+            checksum_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", checksum)) + '"'
+            calculated_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", preset_data.checksum)) + '"'
 
-        self.preset_data = preset_data # TODO maybe remove
+            print(f"Warning: Received checksum {checksum_print} does not match calculated checksum {calculated_print}")
+
         return preset_data
     
-    def download_preset(self) -> FlashSensorFrame:
-        return FlashSensorFrame()
+    def download_preset(self, serial_connection: SerialObj, path="a_output/downloaded_preset.json") -> None:
+        # preset opcode
+        serial_connection.send(b"\x24")
+        # download subcommand code
+        serial_connection.send(b"\x02")
+
+        preset_len = struct.calcsize(self.preset_config.struct_format)
+
+        preset_bytes = serial_connection.read(preset_len)
+
+        preset_data = self._parse_preset(preset_bytes)
+
+        preset_data.save_preset(path)
     
-    def verify_preset(self) -> FlashSensorFrame:
-        return FlashSensorFrame()
+    def verify_preset(self, serial_connection: SerialObj) -> bool:
+        # preset opcode
+        serial_connection.send(b"\x24")
+        # verify subcommand code
+        serial_connection.send(b"\x03")
+
+        received_checksum = serial_connection.read()
+
+        match received_checksum:
+            case b"\x00":
+                print("Invalid Checksum")
+                return False
+            case b"\x01":
+                print("Valid Checksum")
+                return True
+            case _:
+                print("Unexpected Result")
+                return False
     
-    def upload_preset(self) -> FlashSensorFrame:
-        return FlashSensorFrame()
+    @classmethod
+    def upload_preset(cls, serial_connection: SerialObj, path: str="a_input/appa_preset.json") -> "Parser":
+        if not os.path.exists(path): print(f"File {path} does not exist")
+
+        parser = Parser.from_file(path=path)
+ 
+        if parser.preset_data is None: 
+            raise ValueError("Error: Failed to create preset data from file")
+        
+        data = parser.preset_data.to_bytes()
+
+        # preset opcode
+        serial_connection.send(b"\x24")
+        # upload subcommand code
+        serial_connection.send(b"\x01")
+ 
+        serial_connection.send(data)
+
+        return parser
     
     def flash_extract(self, serial_connection: SerialObj, store_preset: bool, store_data: bool) -> List[FlashSensorFrame]:
         # flash opcode
@@ -239,16 +294,16 @@ class Parser:
         preset_size = struct.calcsize(self.preset_config.struct_format)
         preset_bytes = flash_bytes[2:preset_size + 2]
         
-        self._parse_preset(preset_bytes)
+        flash_extract_preset = self._parse_preset(preset_bytes)
         
-        if self.preset_data is None: raise ValueError("Erorr: Failed to parse preset")
+        if flash_extract_preset is None: raise ValueError("Erorr: Failed to parse preset")
 
-        if store_preset: self.preset_data.save_preset()
+        if store_preset: flash_extract_preset.save_preset(path="a_output/flash_extracted_preset.json")
             
-        self._compute_frames(str(self.preset_data.data_bitmask))
+        self._compute_frames(str(flash_extract_preset.data_bitmask))
 
         sensor_frame_names = []
-        enabled_data = appa_data_bitmask_from_bits(str(self.preset_data.data_bitmask))
+        enabled_data = appa_data_bitmask_from_bits(str(flash_extract_preset.data_bitmask))
         
         data_idx = 0
         for bit in str(enabled_data):
@@ -260,6 +315,7 @@ class Parser:
         sensor_frame_size = struct.calcsize(self.sensor_struct_format)
 
         start_idx = sensor_frame_size
+        while start_idx < preset_size: start_idx += sensor_frame_size
         stop_idx = start_idx + sensor_frame_size
         
         all_sensor_frames: List[FlashSensorFrame] = []
