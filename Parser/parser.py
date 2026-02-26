@@ -12,7 +12,7 @@ from .feature import Feature
 from .preset_config import PresetConfig, ConfigEntry
 from .preset_data import PresetData, DataEntry
 from .toggle import Toggle
-from SerialController import SerialObj
+from SDECv2.SerialController import SerialObj
 from typing import List
 
 FLASH_SIZE = 524288

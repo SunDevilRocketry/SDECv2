@@ -1,6 +1,6 @@
 from .toggle import Toggle
-from BaseController import BaseSensor
 from dataclasses import dataclass
+from SDECv2.BaseController import BaseSensor
 from typing import List
 
 @dataclass

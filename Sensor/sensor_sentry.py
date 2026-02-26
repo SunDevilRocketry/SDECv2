@@ -7,7 +7,7 @@ import time
 from .create_sensors import rev2_dashboard_dump_sensors
 from .sensor import Sensor
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
-from SerialController import SerialObj
+from SDECv2.SerialController import SerialObj
 from typing import List, Callable, Dict, Optional, Generator
 
 class SensorSentry:

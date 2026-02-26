@@ -1,1 +1,4 @@
 SDECv2 is an in-progress recreation/upgrade of legacy SDEC.
+
+Before running:
+- pip install -e .
