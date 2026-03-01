@@ -3,6 +3,6 @@
 
 from .serial_sentry import SerialSentry
 from .serial_controller import SerialObj
-from .comport import Comport
+from .comport import Comport, Status
 
-__all__ = ["SerialSentry", "SerialObj", "Comport"]
+__all__ = ["SerialSentry", "SerialObj", "Comport", "Status"]
