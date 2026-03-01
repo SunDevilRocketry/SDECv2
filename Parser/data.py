@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 from .toggle import Toggle
 from dataclasses import dataclass
 from SDECv2.BaseController import BaseSensor

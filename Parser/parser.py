@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 import builtins
 import json
 import os
@@ -314,6 +317,7 @@ class Parser:
         
         sensor_frame_size = struct.calcsize(self.sensor_struct_format)
 
+        # Calculate the start index based on how many sensor frames are needed for the preset 
         start_idx = sensor_frame_size
         while start_idx < preset_size: start_idx += sensor_frame_size
         stop_idx = start_idx + sensor_frame_size

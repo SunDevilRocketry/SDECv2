@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2025 Sun Devil Rocketry
+
 import builtins
 import crc32c
 import json
@@ -59,9 +62,6 @@ class PresetData:
                             case 4: payload.extend(struct.pack("<I", entry.value))
                 
         add_entries(self.config_data)
-        # add_entries(self.imu_data)
-        # add_entries(self.baro_data)
-        # add_entries(self.servo_data)
 
         object.__setattr__(self, "checksum", crc32c.crc32(payload) & 0xFFFFFFFF)
 
@@ -113,8 +113,5 @@ class PresetData:
                             case 4: data.extend(struct.pack("<I", entry.value))
 
         entries_to_bytes(self.config_data)
-        # entries_to_bytes(self.imu_data)
-        # entries_to_bytes(self.baro_data)
-        # entries_to_bytes(self.servo_data)
 
         return data
