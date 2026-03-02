@@ -33,14 +33,14 @@ def test_sensor():
             size=base_sensor.size,
             data_type=base_sensor.data_type,
             unit=base_sensor.unit,
-            convert_data=conv_functions.imu_accel,
+            convert_data=None,
             poll_code=poll_code,
             offset=offset
         )
 
     # Create the serial connection
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM3", 921600, 5)
+    serial_connection.init_comport("COM6", 921600, 5)
     serial_connection.open_comport()
 
     # Poll AccX for 2 seconds

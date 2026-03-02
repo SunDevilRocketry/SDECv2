@@ -6,7 +6,7 @@ Before running:
 ```
 {
   "python.analysis.extraPaths": [
-    "${workspaceFolder}"
+    "${workspaceFolder}/.."
   ]
 }
 ```

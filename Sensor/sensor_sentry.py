@@ -33,6 +33,7 @@ class SensorSentry:
         self.sensors.append(sensor)
         self.size += sensor.size
 
+    # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def poll(self, 
              serial_connection: SerialObj,
              timeout: int | None=None,

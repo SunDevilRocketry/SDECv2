@@ -10,7 +10,7 @@ def test_preset():
 
 def test_flash_extract():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.init_comport("COM6", 921600, 1)
     serial_connection.open_comport()
 
     appa_preset_config = create_configs.appa_preset_config()
@@ -69,15 +69,4 @@ def test_from_file_flash_extract():
     serial_connection.close_comport()
 
 if __name__ == "__main__":
-    # test_download_preset()
-    # input("preset downloaded")
-    # test_verify_preset()
-    # input("preset verified")
-    # test_from_file_flash_extract()
-
-    test_upload_preset()
-    input("preset uploaded")
-    test_verify_preset()
-    input("preset verified")
-    test_download_preset()
-    #test_from_file_flash_extract()
+    test_flash_extract()

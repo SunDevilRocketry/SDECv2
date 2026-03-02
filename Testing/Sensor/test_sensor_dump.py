@@ -4,6 +4,7 @@ from BaseController import Firmware, BaseController
 from BaseController import create_controllers
 from Sensor import Sensor
 from Sensor import conv_functions
+from Sensor.create_sensors import flight_computer_rev2_sensors
 from SerialController import SerialSentry, SerialObj, Comport
 from typing import List
 
@@ -24,28 +25,13 @@ def test_sensor():
     poll_codes = appa_fc_rev2_base_controller.controller.poll_codes
 
     # Extract the Sensor objects for the AccX, AccY, and AccZ sensors
-    acc_sensors: List[Sensor] = []
-    offset = 0
-    for i, (poll_code, base_sensor) in enumerate(poll_codes.items()):
-        if i == 3: break
+    acc_sensors = flight_computer_rev2_sensors()[0:3]
 
-        new_sensor = Sensor(
-            short_name=base_sensor.short_name,
-            name=base_sensor.name,
-            size=base_sensor.size,
-            data_type=base_sensor.data_type,
-            unit=base_sensor.unit,
-            convert_data=conv_functions.imu_accel,
-            poll_code=poll_code,
-            offset=offset
-        )
-
-        acc_sensors.append(new_sensor)
-        offset += base_sensor.size
+    print(acc_sensors)
 
     # Create the serial connection
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM3", 921600, 5)
+    serial_connection.init_comport("COM6", 921600, 5)
     serial_connection.open_comport()
 
     # Get each acceleration sensor's data dump
@@ -54,7 +40,7 @@ def test_sensor():
         dump_val = sensor.dump(serial_connection)
 
         if dump_val:
-            print(f"{sensor.name} : {dump_val:.2f} {sensor.unit}")
+            print(f"{sensor.name} : {dump_val:.5f} {sensor.unit}")
         else:
             print(f"{sensor.name} : Data Dump returned None")
     

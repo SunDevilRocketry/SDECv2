@@ -17,14 +17,14 @@ class Sensor(BaseSensor):
             size: int, 
             data_type: type, 
             unit: str, 
-            convert_data: Callable[[float | int], float | int,], 
+            convert_data: Callable[[float | int], float | int,] | None, 
             poll_code: bytes, 
             offset: int
             ):
         super().__init__(short_name, name, size, data_type, unit)
-        self.convert_data: Callable[[float | int], float | int] = convert_data
-        self.poll_code: bytes = poll_code
-        self.offset: int = offset
+        self.convert_data = convert_data
+        self.poll_code = poll_code
+        self.offset = offset
 
     def __eq__(self, other):
         if not isinstance(other, Sensor):
@@ -34,7 +34,21 @@ class Sensor(BaseSensor):
     
     def __hash__(self):
         return hash((self.short_name, self.poll_code, self.offset))
+    
+    def __str__(self):
+        return (
+            "Sensor:{" +
+            "\n Short Name: {}".format(self.short_name) +
+            "\n Name: {}".format(self.name) + 
+            "\n Size: {}".format(self.size) + 
+            "\n Data Type: {}".format(self.data_type) +
+            "\n Unit: {}".format(self.unit) +
+            "\n Poll Code: {}".format(self.poll_code) +
+            "\n Offset: {}".format(self.offset) +
+            "\n}"
+        )
 
+    # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def poll(self, 
                   serial_connection: SerialObj, 
                   timeout: int | None=None, 
@@ -86,6 +100,7 @@ class Sensor(BaseSensor):
             # Resume poll code
             serial_connection.send(b"\xEF")
 
+    # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def dump(self, serial_connection: SerialObj) -> float | int:
         # Sensor opcode
         serial_connection.send(b"\x03") 

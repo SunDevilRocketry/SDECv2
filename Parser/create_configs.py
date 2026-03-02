@@ -60,9 +60,9 @@ def appa_data_bitmask() -> DataBitmask:
                 BaseSensor("gyroYconv", "Pre-converted Gyro Y", 4, float, "deg/s"),
                 BaseSensor("gyroZconv", "Pre-converted Gyro Z", 4, float, "deg/s"),
 
-                BaseSensor("magXconv", "Pre-converted Magnetometer X", 4, float, "deg/s"),
-                BaseSensor("magYconv", "Pre-converted Magnetometer Y", 4, float, "deg/s"),
-                BaseSensor("magZconv", "Pre-converted Magnetometer Z", 4, float, "deg/s"),
+                BaseSensor("magXconv", "Pre-converted Magnetometer X", 4, float, "µT"),
+                BaseSensor("magYconv", "Pre-converted Magnetometer Y", 4, float, "µT"),
+                BaseSensor("magZconv", "Pre-converted Magnetometer Z", 4, float, "µT"),
 
                 BaseSensor("pressure", "Barometric Pressure", 4, float, "kPa"),
                 BaseSensor("temp", "Barometric Temperature", 4, float, "C")

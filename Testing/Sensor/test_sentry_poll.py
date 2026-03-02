@@ -22,12 +22,12 @@ def test_sensor():
     sensor_sentry = SensorSentry()
 
     for sensor in flight_computer_rev2_sensors:
-        if sensor.poll_code in {b"\x00", b"\x01", b"\x02", b"\x0D", b"\x0E", b"\x0F"}:
+        if sensor.poll_code in {b"\x00", b"\x01", b"\x02", b"\x03", b"\x04", b"\x05"}:
             sensor_sentry.add_sensor(sensor)
 
     # Create the serial connection
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM3", 921600, 5)
+    serial_connection.init_comport("COM6", 921600, 5)
     serial_connection.open_comport()
 
     # Get the sensor poll from the sentry

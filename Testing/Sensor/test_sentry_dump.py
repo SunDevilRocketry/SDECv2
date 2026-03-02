@@ -19,15 +19,15 @@ def test_sensor():
     flight_computer_rev2_sensors = create_sensors.flight_computer_rev2_sensors()
 
     # Extract the Sensor objects for the Acc{x,y,z} and gyro{x,y,z}conv sensors
-    sensor_sentry = SensorSentry()
+    sensor_sentry = SensorSentry(sensors=flight_computer_rev2_sensors)
 
-    for sensor in flight_computer_rev2_sensors:
-        if sensor.poll_code in {b"\x00", b"\x01", b"\x02", b"\x0D", b"\x0E", b"\x0F"}:
-            sensor_sentry.add_sensor(sensor)
+    # for sensor in flight_computer_rev2_sensors:
+    #     if sensor.poll_code in {b"\x00", b"\x01", b"\x02", b"\x0D", b"\x0E", b"\x0F"}:
+    #         sensor_sentry.add_sensor(sensor)
 
     # Create the serial connection
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM3", 921600, 5)
+    serial_connection.init_comport("COM6", 921600, 5)
     serial_connection.open_comport()
 
     # Get the sensor dump from the sentry
