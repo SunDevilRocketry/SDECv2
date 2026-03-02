@@ -1,4 +1,4 @@
-SDECv2 is an in-progress recreation/upgrade of legacy SDEC.
+SDECv2 is a recreation/upgrade of legacy SDEC. Replacing SDEC as of v2.0.0.
 
 Before running:
 - pip install -e .
