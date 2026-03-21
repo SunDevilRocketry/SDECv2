@@ -6,6 +6,12 @@ from .base_sensor import BaseSensor
 from SDECv2.Sensor import create_sensors
 
 def flight_computer_rev2_controller() -> Controller:
+    """
+    Create and return a controller for the Flight Computer Rev 2.0.
+
+    Returns:
+        Controller: Configured controller instance for the Flight Computer Rev 2.0.
+    """
     poll_codes = {
         sensor.poll_code: BaseSensor(
             sensor.short_name, 

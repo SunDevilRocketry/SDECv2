@@ -8,15 +8,37 @@ from .comport import Comport, Status
 from typing import List
 
 class SerialObj:
+    """
+    Represents a serial connection object for communication with the Flight Computer.
+    Provides methods to manage and interact with the serial port.
+    """
+
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
 
     def available_comports(self) -> List[str]:
+        """
+        Get a list of available COM ports.
+
+        Returns:
+            List[str]: List of available COM port names.
+        """
         ports = serial.tools.list_ports.comports()
         return [port.device for port in ports]
     
     def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
+        """
+        Initialize the COM port with the specified parameters.
+
+        Args:
+            name (str): Name of the COM port.
+            baudrate (int): Baud rate for the connection.
+            timeout (int): Timeout for the connection.
+
+        Returns:
+            Comport: Configured COM port instance.
+        """
         self.comport = Comport(name, baudrate, timeout)
         self.serialObj.port = name
         self.serialObj.baudrate = baudrate
@@ -24,6 +46,12 @@ class SerialObj:
         return self.comport
 
     def open_comport(self) -> bool:
+        """
+        Open the initialized COM port.
+
+        Returns:
+            bool: True if the port was successfully opened, False otherwise.
+        """
         if self.comport.status is Status.OPEN: return False 
         if self.serialObj.is_open: return False
         if not self.comport: return False
@@ -34,6 +62,12 @@ class SerialObj:
         return True
 
     def close_comport(self) -> bool:
+        """
+        Close the currently open COM port.
+
+        Returns:
+            bool: True if the port was successfully closed, False otherwise.
+        """
         if self.comport.status is Status.CLOSED: return False
         if not self.serialObj.is_open: return False
         if not self.comport: return False
@@ -44,12 +78,27 @@ class SerialObj:
         return True
 
     def send(self, bytes: bytes) -> None:
+        """
+        Send data over the serial connection.
+
+        Args:
+            bytes (bytes): Data to send.
+        """
         try:
             self.serialObj.write(bytes)
         except serial.SerialException as e:
             print(f"Error: {e}")
 
     def read(self, num_bytes: int = 1) -> bytes:
+        """
+        Read data from the serial connection.
+
+        Args:
+            num_bytes (int): Number of bytes to read.
+
+        Returns:
+            bytes: Read data.
+        """
         try:
             data = self.serialObj.read(size=num_bytes)
             return data
@@ -58,6 +107,12 @@ class SerialObj:
             return b""
         
     def reset_input_buffer(self) -> None:
+        """
+        Reset the input buffer of the serial port.
+
+        Returns:
+            None
+        """
         try:
             self.serialObj.reset_input_buffer()
         except serial.SerialException as e:

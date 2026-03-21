@@ -1,6 +1,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
+"""
+This module provides functions to convert and process raw bytes to standard data types. 
+"""
+
 import builtins
 import struct
 
@@ -20,6 +24,17 @@ def process_data_bytes(data_bytes: bytes,
                        data_type: type, 
                        convert_data: Callable[[float | int], float | int] | None
                        ) -> float | int | None:
+    """
+    Convert bytes to an int or float then use a conversion function if provided.
+
+    Args:
+        data_bytes (bytes): The data to convert from bytes in to an int or float.
+        data_type (type): The data type the bytes need to be converted into.
+        convert_data (Callable[[float | int], float | int] | None): The conversion function to process the int or float.
+
+    Returns:
+        float | int | None: The final data value.
+    """
     if data_bytes is None:
         print("Failed to get data from board")
         return None
