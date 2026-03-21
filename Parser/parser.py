@@ -267,7 +267,7 @@ class Parser:
 
         return parser
     
-    def flash_extract(self, serial_connection: SerialObj, store_preset: bool, store_data: bool) -> List[FlashSensorFrame]:
+    def flash_extract(self, serial_connection: SerialObj, preset_path: str="a_output/flash_extracted_preset.json", data_path: str="a_output/flash_extract.csv") -> List[FlashSensorFrame]:
         # flash opcode
         serial_connection.send(b"\x22")
         # flash extract subcommand code
@@ -277,7 +277,7 @@ class Parser:
 
         flash_bytes = bytearray()
         for i in range(num_frames):
-            if (i % 128 == 0): print(f"Reading block {i} ...")
+            if (i % 100 == 0): print(f"Reading block (size 512) {i} ...")
             chunk = serial_connection.read(num_bytes=512)
             
             num_received = len(chunk)
@@ -301,7 +301,7 @@ class Parser:
         
         if flash_extract_preset is None: raise ValueError("Erorr: Failed to parse preset")
 
-        if store_preset: flash_extract_preset.save_preset(path="a_output/flash_extracted_preset.json")
+        if preset_path != "": flash_extract_preset.save_preset(path=preset_path)
             
         self._compute_frames(str(flash_extract_preset.data_bitmask))
 
@@ -346,8 +346,8 @@ class Parser:
             all_sensor_frames.append(FlashSensorFrame(curr_sensor_frame))
             sensor_frame_dicts.append(curr_sensor_frame)
 
-        if store_data:
+        if data_path != "":
             flash_data = pd.DataFrame(sensor_frame_dicts)
-            flash_data.to_csv("a_output/flash_extract.csv", index=False)
+            flash_data.to_csv(data_path, index=False)
 
         return all_sensor_frames

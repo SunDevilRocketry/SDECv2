@@ -19,7 +19,7 @@ def test_flash_extract():
         preset_data=None
     )
     
-    all_flash_data = appa_parser.flash_extract(serial_connection, store_preset=True, store_data=True)
+    all_flash_data = appa_parser.flash_extract(serial_connection)
 
     serial_connection.close_comport()
 
@@ -64,7 +64,7 @@ def test_from_file_flash_extract():
 
     downloaded_parser = Parser.from_file(path="a_input/to_upload_preset.json")
     
-    all_flash_data = downloaded_parser.flash_extract(serial_connection, store_preset=True, store_data=True)
+    all_flash_data = downloaded_parser.flash_extract(serial_connection)
 
     serial_connection.close_comport()
 
