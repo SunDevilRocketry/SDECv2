@@ -21,7 +21,19 @@ from typing import List
 FLASH_SIZE = 524288
 
 class Parser:
+    """
+    Parses and manages preset configurations and data for the Flight Computer.
+    Provides methods to load, verify, upload, and manipulate presets.
+    """
+
     def __init__(self, preset_config: PresetConfig, preset_data: PresetData | None):
+        """
+        Initialize the parser with preset configuration and data.
+
+        Args:
+            preset_config (PresetConfig): Configuration details for the preset.
+            preset_data (PresetData | None): Data associated with the preset.
+        """
         self.preset_config = preset_config
         self.preset_data = preset_data
 
@@ -29,6 +41,18 @@ class Parser:
 
     @classmethod
     def from_file(cls, path: str) -> "Parser":
+        """
+        Create a Parser instance from a JSON file.
+
+        Args:
+            path (str): Path to the JSON file containing preset data.
+
+        Returns:
+            Parser: A new Parser instance initialized with the file's data.
+
+        Raises:
+            ValueError: If required fields are missing or invalid in the JSON file.
+        """
         with open(path, "r") as f:
             json_input = json.load(f)
 
@@ -132,7 +156,13 @@ class Parser:
 
         return cls(preset_config, preset_data)
 
-    def _compute_frames(self, bits: str):
+    def _compute_frames(self, bits: str) -> None:
+        """
+        Compute the sensor frame structure based on the data bitmask.
+
+        Args:
+            bits (str): Binary string representing the data bitmask.
+        """
         enabled_data = appa_data_bitmask_from_bits(bits)
 
         datas_idx = 0
@@ -157,6 +187,18 @@ class Parser:
             datas_idx += 1
 
     def _parse_preset(self, preset_bytes: bytes) -> PresetData:
+        """
+        Parse preset data from raw bytes.
+
+        Args:
+            preset_bytes (bytes): Raw bytes representing the preset data.
+
+        Returns:
+            PresetData: Parsed preset data object.
+
+        Raises:
+            ValueError: If the preset data is invalid or incomplete.
+        """
         struct_format = self.preset_config.struct_format
         if struct.calcsize(struct_format) != len(preset_bytes): print("Error: Preset Config size does not match preset bytes")
 
@@ -215,6 +257,13 @@ class Parser:
         return preset_data
     
     def download_preset(self, serial_connection: SerialObj, path="a_output/downloaded_preset.json") -> None:
+        """
+        Download the preset from the Flight Computer and save it to a file.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            path (str): Path to save the downloaded preset JSON file.
+        """
         # preset opcode
         serial_connection.send(b"\x24")
         # download subcommand code
@@ -229,6 +278,15 @@ class Parser:
         preset_data.save_preset(path)
     
     def verify_preset(self, serial_connection: SerialObj) -> bool:
+        """
+        Verify the checksum of the preset on the Flight Computer.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+
+        Returns:
+            bool: True if the checksum is valid, False otherwise.
+        """
         # preset opcode
         serial_connection.send(b"\x24")
         # verify subcommand code
@@ -249,6 +307,19 @@ class Parser:
     
     @classmethod
     def upload_preset(cls, serial_connection: SerialObj, path: str="a_input/appa_preset.json") -> "Parser":
+        """
+        Upload a preset to the Flight Computer from a JSON file.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            path (str): Path to the JSON file containing the preset data.
+
+        Returns:
+            Parser: A Parser instance initialized with the uploaded preset data.
+
+        Raises:
+            ValueError: If the preset data is invalid or the file does not exist.
+        """
         if not os.path.exists(path): print(f"File {path} does not exist")
 
         parser = Parser.from_file(path=path)
@@ -268,6 +339,20 @@ class Parser:
         return parser
     
     def flash_extract(self, serial_connection: SerialObj, preset_path: str="a_output/flash_extracted_preset.json", data_path: str="a_output/flash_extract.csv") -> List[FlashSensorFrame]:
+        """
+        Extract flash memory data from the Flight Computer.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            preset_path (str): Path to save the extracted preset JSON file.
+            data_path (str): Path to save the extracted sensor data as a CSV file.
+
+        Returns:
+            List[FlashSensorFrame]: List of sensor frames extracted from flash memory.
+
+        Raises:
+            ValueError: If the preset data cannot be parsed.
+        """
         # flash opcode
         serial_connection.send(b"\x22")
         # flash extract subcommand code

@@ -10,6 +10,11 @@ from SDECv2.SerialController import SerialObj
 from typing import Callable, Generator
 
 class Sensor(BaseSensor):
+    """
+    Represents a sensor with metadata and conversion functions.
+    Provides methods for equality checks and string representation.
+    """
+
     def __init__(
             self, 
             short_name: str, 
@@ -27,15 +32,37 @@ class Sensor(BaseSensor):
         self.offset = offset
 
     def __eq__(self, other):
+        """
+        Check if two sensors are equal based on their attributes.
+
+        Args:
+            other (Sensor): The sensor to compare with.
+
+        Returns:
+            bool: True if sensors are equal, False otherwise.
+        """
         if not isinstance(other, Sensor):
             return False
         
         return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
     
     def __hash__(self):
+        """
+        Compute a hash value for the sensor based on its attributes.
+        Only hashes the unchanging attributes of the sensor. 
+
+        Returns:
+            int: Hash value of the sensor.
+        """
         return hash((self.short_name, self.poll_code, self.offset))
     
     def __str__(self):
+        """
+        Return a string representation of the sensor.
+
+        Returns:
+            str: String representation of the sensor's attributes.
+        """
         return (
             "Sensor:{" +
             "\n Short Name: {}".format(self.short_name) +
@@ -54,6 +81,17 @@ class Sensor(BaseSensor):
                   timeout: int | None=None, 
                   count: int | None=None
                   ) -> Generator[float | int, None, None]:
+        """
+        Poll the sensor and yield the converted data.
+
+        Args:
+            serial_connection (SerialObj): The serial connection object.
+            timeout (int | None): The maximum time to wait for a response.
+            count (int | None): The number of times to poll.
+
+        Yields:
+            float | int: The converted sensor data.
+        """
         # Sensor opcode
         serial_connection.send(b"\x03") 
 
@@ -102,6 +140,15 @@ class Sensor(BaseSensor):
 
     # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def dump(self, serial_connection: SerialObj) -> float | int:
+        """
+        Dump the sensor data.
+
+        Args:
+            serial_connection (SerialObj): The serial connection object.
+
+        Returns:
+            float | int: The converted sensor data.
+        """
         # Sensor opcode
         serial_connection.send(b"\x03") 
 

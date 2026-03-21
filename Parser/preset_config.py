@@ -6,16 +6,32 @@ from dataclasses import dataclass
 
 @dataclass
 class ConfigEntry:
+    """
+    Represents a configuration entry with metadata name, size, and data type.
+    Provides methods for string representation.
+    """
+
     name: str
     size: int
     data_type: type
 
     def __str__(self):
+        """
+        Return a string representation of the configuration entry.
+
+        Returns:
+            str: String representation of the entry's attributes.
+        """
         spaces = " " * (22 - len(self.name))
         return f"Name: {self.name} {spaces} | Size: {self.size} | Data Type: {self.data_type}"
 
 @dataclass
 class PresetConfig:
+    """
+    Represents the configuration for a preset, including data, IMU, barometric, and servo configurations.
+    Provides methods for pretty-printing and structure formatting.
+    """
+
     data_config: list[ConfigEntry]
     imu_config: list[ConfigEntry]
     baro_config: list[ConfigEntry]
@@ -24,6 +40,15 @@ class PresetConfig:
     struct_format: str = "<"
 
     def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
         spaces = "  " * (1 + indent)
         return (
             "Preset Config {\n" +
@@ -35,9 +60,15 @@ class PresetConfig:
         )
 
     def __str__(self):
+        """
+        Return a string representation of the preset configuration.
+        """
         return self.pretty_print()
     
     def __post_init__(self):
+        """
+        Initialize the structure format string based on the configuration entries.
+        """
         self.struct_format += "I" # Checksum
         self.struct_format += "I" # Feature Bitmask
         self.struct_format += "I" # Data Bitmask 

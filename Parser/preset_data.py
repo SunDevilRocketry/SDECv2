@@ -10,17 +10,33 @@ from dataclasses import dataclass, field
 
 @dataclass
 class DataEntry:
+    """
+    Represents a data entry with metadta name, size, data type, and value.
+    Provides methods for string representation.
+    """
+
     name: str
     size: int
     data_type: type
     value: int | float | None = None
 
     def __str__(self):
+        """
+        Return a string representation of the data entry.
+
+        Returns:
+            str: String representation of the entry's attributes.
+        """
         spaces = " " * (22 - len(self.name))
         return f"Name: {self.name} {spaces} | Size: {self.size} | Data Type: {self.data_type}"
 
 @dataclass
 class PresetData:
+    """
+    Represents the data for a preset, including feature and data bitmasks, and data entries.
+    Provides methods for pretty-printing, saving, and converting to bytes.
+    """
+
     feature_bitmask: FeatureBitmask
     data_bitmask: DataBitmask
     config_data: list[DataEntry]
@@ -31,6 +47,15 @@ class PresetData:
     checksum: int = field(init=False)
 
     def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset data.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset data.
+        """
         spaces = "  " * indent
         return (
             f"{spaces}Feature Bitmask: {self.feature_bitmask}\n" + 
@@ -42,9 +67,15 @@ class PresetData:
         )
 
     def __str__(self):
+        """
+        Return a string representation of the preset data.
+        """
         return self.pretty_print()
 
     def __post_init__(self):
+        """
+        Calculate the checksum for the preset data based on its payload.
+        """
         payload = bytearray()
 
         payload.extend(self.feature_bitmask.to_bytes())
@@ -66,6 +97,12 @@ class PresetData:
         object.__setattr__(self, "checksum", crc32c.crc32(payload) & 0xFFFFFFFF)
 
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
+        """
+        Save the preset data to a JSON file.
+
+        Args:
+            path (str): Path to save the JSON file.
+        """
         feature_bitmask = {}
         for feature in self.feature_bitmask.features:
             feature_bitmask[feature.name] = True if feature.bit() == "1" else False
@@ -95,6 +132,12 @@ class PresetData:
             json.dump(json_output, f, indent=4)
 
     def to_bytes(self) -> bytes:
+        """
+        Convert the preset data to a byte array.
+
+        Returns:
+            bytes: Byte array representation of the preset data.
+        """
         data = bytearray()
 
         data.extend(struct.pack("<I", self.checksum))

@@ -11,7 +11,17 @@ from SDECv2.SerialController import SerialObj
 from typing import List, Callable, Dict, Optional, Generator
 
 class SensorSentry:
+    """
+    Manages a collection of sensors and provides methods for initialization and polling.
+    """
+
     def __init__(self, sensors: Optional[List[Sensor]] = None):
+        """
+        Initialize the SensorSentry with an optional list of sensors.
+
+        Args:
+            sensors (Optional[List[Sensor]]): List of sensors to manage.
+        """
         self.sensors: List[Sensor] = sensors if sensors is not None else []
         self.size: int = sum(sensor.size for sensor in self.sensors)
 
@@ -25,11 +35,30 @@ class SensorSentry:
             convert_data: Callable[[float | int], float | int], 
             poll_code: bytes, 
             offset: int):
+        """
+        Initialize and add a new sensor to the sentry.
+
+        Args:
+            short_name (str): Short name of the sensor.
+            name (str): Full name of the sensor.
+            size (int): Size of the sensor data.
+            data_type (type): Data type of the sensor.
+            unit (str): Unit of measurement for the sensor.
+            convert_data (Callable[[float | int], float | int]): Conversion function for sensor data.
+            poll_code (bytes): Poll code for the sensor.
+            offset (int): Offset for the sensor data.
+        """
         new_sensor = Sensor(short_name, name, size, data_type, unit, convert_data, poll_code, offset)
         self.sensors.append(new_sensor)
         self.size += size
 
     def add_sensor(self, sensor: Sensor):
+        """
+        Add an existing sensor to the sentry.
+
+        Args:
+            sensor (Sensor): The sensor to add.
+        """
         self.sensors.append(sensor)
         self.size += sensor.size
 
@@ -39,6 +68,17 @@ class SensorSentry:
              timeout: int | None=None,
              count: int | None=None
              ) -> Generator[Dict[Sensor, float | int | None], None, None]:
+        """
+        Poll the sensors and yield their data.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            timeout (int | None): Timeout for polling.
+            count (int | None): Number of polls to perform.
+
+        Yields:
+            Generator[Dict[Sensor, float | int | None], None, None]: Sensor data for each poll.
+        """
         # Verify sentry has configured sensors
         if len(self.sensors) == 0: 
             print("Sentry has no sensors")
@@ -99,6 +139,15 @@ class SensorSentry:
             serial_connection.send(b"\xEF")
 
     def dump(self, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
+        """
+        Dump the sensor data.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+
+        Returns:
+            Dict[Sensor, float | int | None]: Sensor data.
+        """
         # Verify sentry has configured sensors
         if len(self.sensors) == 0: 
             print("Sentry has no sensors")
@@ -130,6 +179,15 @@ class SensorSentry:
 
     @classmethod
     def dashboard_dump(cls, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
+        """
+        Dashboard dump opcode.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+
+        Returns:
+            Dict[Sensor, float | int | None]: Sensor data.
+        """
         # Dashboard dump opcode
         serial_connection.send(b"\x30")
 

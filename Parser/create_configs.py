@@ -9,6 +9,12 @@ from .toggle import Toggle
 from SDECv2.BaseController import BaseSensor
 
 def appa_feature_bitmask() -> FeatureBitmask:
+    """
+    Create and return a feature bitmask for v2.6.0 APPA of the Flight Computer Rev 2 Firmware.
+
+    Returns:
+        FeatureBitmask: Configured feature bitmask instance.
+    """
     features = [
         Feature(
             name="Data Logging",
@@ -47,6 +53,12 @@ def appa_feature_bitmask() -> FeatureBitmask:
     return FeatureBitmask(features=features)
 
 def appa_data_bitmask() -> DataBitmask:
+    """
+    Create and return a data bitmask for v2.6.0 APPA of the Flight Computer Rev 2 Firmware.
+
+    Returns:
+        DataBitmask: Configured data bitmask instance.
+    """
     datas = [
         Data(
             name="conv",
@@ -118,6 +130,12 @@ def appa_data_bitmask() -> DataBitmask:
     return DataBitmask(datas=datas)
 
 def appa_feature_bitmask_from_bits(bits: str) -> FeatureBitmask:
+    """
+    Create and return the feature bitmask from a bit string.
+
+    Returns:
+        FeatureBitmask: Converted feature bitmask.
+    """
     appa_features = appa_feature_bitmask().features
     if len(bits) != 8:
         raise ValueError(f"Bitmask {bits} is not length 8")
@@ -134,6 +152,12 @@ def appa_feature_bitmask_from_bits(bits: str) -> FeatureBitmask:
     return FeatureBitmask(bitmask=bits, features=features)
 
 def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
+    """
+    Create and return the data bitmask from a bit string.
+
+    Returns:
+        DataBitmask: Converted feature bitmask.
+    """
     appa_datas = appa_data_bitmask().datas
     if len(bits) != 8:
         raise ValueError(f"Bitmask {bits} is not length 8")
@@ -151,6 +175,12 @@ def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
     return DataBitmask(bitmask=bits, datas=datas)
 
 def appa_preset_config() -> PresetConfig:
+    """
+    Create and return the default PresetConfig for v2.6.0 APPA of the Flight Computer Rev 2 Firmware.
+
+    Returns:
+        PresetConfig: The default PresetConfig.
+    """
     return PresetConfig(
         data_config=[
             ConfigEntry("Sensor calib samples", 2, int),
