@@ -107,8 +107,8 @@ class SerialSentry:
                 else:
                     curr_serial_obj = SnapshotSerialObj(None)
                 
-                print("Initial Comport: {}".format(initial_serial_obj))
-                print("Current Comport: {}".format(curr_serial_obj))
+                print(f"Initial Comport: {initial_serial_obj}")
+                print(f"Current Comport: {curr_serial_obj}")
                 
                 if initial_serial_obj != curr_serial_obj:
                     serial_obj_report = ChangedSerialObj(
@@ -152,7 +152,7 @@ class SerialSentry:
     def __str__(self):
         return (
             "Serial Sentry:{" +
-            "\n{}".format(self.serial_objs) +
+            f"\n{self.serial_objs}" +
             "\n}"
         )
     

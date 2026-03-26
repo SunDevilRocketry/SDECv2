@@ -24,9 +24,9 @@ class Firmware:
         """
         return (
             "Firmware:{" +
-            "\n ID: {}".format(self.id) + 
-            "\n Name: {}".format(self.name) +
-            "\n Preset Frame Size: {}".format(self.preset_frame_size) +
-            "\n Preset File: {}".format(self.preset_file) +
+            f"\n ID: {self.id}" + 
+            f"\n Name: {self.name}" +
+            f"\n Preset Frame Size: {self.self.preset_frame_size}" +
+            f"\n Preset File: {self.preset_file}" +
             "\n}"
         )

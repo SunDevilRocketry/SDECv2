@@ -121,7 +121,7 @@ class SerialObj:
     def __str__(self):
         return (
                 "SerialController:{" +
-                "\n{}".format(self.comport) +
+                f"\n{self.comport}" +
                 "\n}"
             )
     
