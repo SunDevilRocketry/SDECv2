@@ -38,13 +38,13 @@ class Sensor(BaseSensor):
     def __str__(self):
         return (
             "Sensor:{" +
-            "\n Short Name: {}".format(self.short_name) +
-            "\n Name: {}".format(self.name) + 
-            "\n Size: {}".format(self.size) + 
-            "\n Data Type: {}".format(self.data_type) +
-            "\n Unit: {}".format(self.unit) +
-            "\n Poll Code: {}".format(self.poll_code) +
-            "\n Offset: {}".format(self.offset) +
+            f"\n Short Name: {self.short_name}" +
+            f"\n Name: {self.name}" + 
+            f"\n Size: {self.size}" + 
+            f"\n Data Type: {self.data_type}" +
+            f"\n Unit: {self.unit}" +
+            f"\n Poll Code: {self.self.poll_code}" +
+            f"\n Offset: {self.offset}" +
             "\n}"
         )
 

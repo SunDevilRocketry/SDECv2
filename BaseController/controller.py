@@ -16,10 +16,10 @@ class Controller:
     def __str__(self):
         return (
             "Controller:{" +
-            "\n ID: {}".format(self.id) +
-            "\n Name: {}".format(self.name) +
-            "\n Sensor Frame Size: {}".format(self.sensor_frame_size) +
-            "\n Sensor Data File: {}".format(self.sensor_data_file) +
+            f"\n ID: {self.id}" +
+            f"\n Name: {self.name}" +
+            f"\n Sensor Frame Size: {self.sensor_frame_size}" +
+            f"\n Sensor Data File: {self.sensor_data_file}" +
             "\n}"
         )
     
@@ -29,6 +29,6 @@ class Controller:
     def get_formatted_poll_codes(self):
         to_return = []
         for byte, sensor in self.poll_codes.items():
-            to_return.append("{} : {}".format(self.raw_bytes_repr(byte), sensor))
+            to_return.append(f"{self.raw_bytes_repr(byte)} : {sensor}")
         
         return "\n".join(to_return)

@@ -14,7 +14,7 @@ class BaseController:
     def __str__(self):
         return (
             "Base Controller:{" + 
-            "\n{}".format(self.firmware) +
-            "\n{}".format(self.controller) +
+            f"\n{self.firmware}" +
+            f"\n{self.controller}" +
             "\n}"
         )

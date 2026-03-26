@@ -14,11 +14,11 @@ class BaseSensor:
     def __str__(self):
         return (
             "Sensor:{" +
-            "\n Short Name: {}".format(self.short_name) +
-            "\n Name: {}".format(self.name) + 
-            "\n Size: {}".format(self.size) + 
-            "\n Data Type: {}".format(self.data_type) +
-            "\n Unit: {}".format(self.unit) +
+            f"\n Short Name: {self.short_name}" +
+            f"\n Name: {self.name}" + 
+            f"\n Size: {self.size}" + 
+            f"\n Data Type: {self.data_type}" +
+            f"\n Unit: {self.unit}" +
             "\n}"
         )
     

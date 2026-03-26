@@ -33,10 +33,10 @@ class Comport:
     def __str__(self):
         return (
             "Comport:{" +
-            "\n Name: {}".format(self.name) +
-            "\n Status: {}".format(self.status) +
-            "\n Baudrate: {}".format(self.baudrate) +
-            "\n Timeout: {}".format(self.timeout) +
+            f"\n Name: {self.name}" +
+            f"\n Status: {self.status}" +
+            f"\n Baudrate: {self.baudrate}" +
+            f"\n Timeout: {self.timeout}" +
             "\n}"
         )
     
