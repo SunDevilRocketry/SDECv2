@@ -213,3 +213,27 @@ class SensorSentry:
             sensor_dump[sensor] = converted_number
 
         return sensor_dump
+    
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
+        spaces = "  " * (1 + indent)
+        return (
+            "Sensory Sentry {\n" +
+            f"{spaces}Sensors: \n{"\n".join(sensor.pretty_print(1) for sensor in self.sensors)}\n" +
+            f"{spaces}Size: {self.size}\n" +
+            "}"
+        )
+
+    def __str__(self):
+        """
+        Return a string representation of the preset configuration.
+        """
+        return self.pretty_print()

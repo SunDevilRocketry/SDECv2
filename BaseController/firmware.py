@@ -26,7 +26,7 @@ class Firmware:
             "Firmware:{" +
             f"\n ID: {self.id}" + 
             f"\n Name: {self.name}" +
-            f"\n Preset Frame Size: {self.self.preset_frame_size}" +
+            f"\n Preset Frame Size: {self.preset_frame_size}" +
             f"\n Preset File: {self.preset_file}" +
             "\n}"
         )

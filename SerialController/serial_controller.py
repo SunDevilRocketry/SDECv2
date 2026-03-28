@@ -117,13 +117,32 @@ class SerialObj:
             self.serialObj.reset_input_buffer()
         except serial.SerialException as e:
             print(f"Error: {e}")
+
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
+        spaces = "  " * (1 + indent)
+
+        return (
+            f"{"  " * indent}Serial Obj {{\n" +
+            f"{spaces}Port: {self.serialObj.port}\n" + 
+            f"{spaces}Baud: {self.serialObj.baudrate}\n" +
+            f"{spaces}Timeout: {self.serialObj.timeout}\n" +
+            f"{"  " * indent}}}"
+        )
     
     def __str__(self):
-        return (
-                "SerialController:{" +
-                f"\n{self.comport}" +
-                "\n}"
-            )
+        """
+        Return a string representation of the preset configuration.
+        """
+        return self.pretty_print()
     
     def __repr__(self):
         return self.__str__()

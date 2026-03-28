@@ -148,13 +148,29 @@ class SerialSentry:
             List[ChangedSerialObj]: List of changed serial objects.
         """
         return self.changed_serial_objs
+    
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset data.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset data.
+        """
+        spaces = "  " * (1 + indent)
+        return (
+            "Serial Sentry {\n" +
+            f"{spaces}Serial Objects: \n{"\n".join(serial_obj.pretty_print(1) for serial_obj in self.serial_objs.values())}\n" +
+            "}"
+        )
         
     def __str__(self):
-        return (
-            "Serial Sentry:{" +
-            f"\n{self.serial_objs}" +
-            "\n}"
-        )
+        """
+        Return a string representation of the preset configuration.
+        """
+        return self.pretty_print()
     
     def __repr__(self):
         return self.__str__()
