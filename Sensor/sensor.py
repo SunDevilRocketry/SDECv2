@@ -31,50 +31,6 @@ class Sensor(BaseSensor):
         self.poll_code = poll_code
         self.offset = offset
 
-    def __eq__(self, other):
-        """
-        Check if two sensors are equal based on their attributes.
-
-        Args:
-            other (Sensor): The sensor to compare with.
-
-        Returns:
-            bool: True if sensors are equal, False otherwise.
-        """
-        if not isinstance(other, Sensor):
-            return False
-        
-        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
-    
-    def __hash__(self):
-        """
-        Compute a hash value for the sensor based on its attributes.
-        Only hashes the unchanging attributes of the sensor. 
-
-        Returns:
-            int: Hash value of the sensor.
-        """
-        return hash((self.short_name, self.poll_code, self.offset))
-    
-    def __str__(self):
-        """
-        Return a string representation of the sensor.
-
-        Returns:
-            str: String representation of the sensor's attributes.
-        """
-        return (
-            "Sensor:{" +
-            f"\n Short Name: {self.short_name}" +
-            f"\n Name: {self.name}" + 
-            f"\n Size: {self.size}" + 
-            f"\n Data Type: {self.data_type}" +
-            f"\n Unit: {self.unit}" +
-            f"\n Poll Code: {self.self.poll_code}" +
-            f"\n Offset: {self.offset}" +
-            "\n}"
-        )
-
     # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def poll(self, 
                   serial_connection: SerialObj, 
@@ -178,3 +134,61 @@ class Sensor(BaseSensor):
         if converted_number is not None: return converted_number
 
         return 0
+    
+    def __eq__(self, other):
+        """
+        Check if two sensors are equal based on their attributes.
+
+        Args:
+            other (Sensor): The sensor to compare with.
+
+        Returns:
+            bool: True if sensors are equal, False otherwise.
+        """
+        if not isinstance(other, Sensor):
+            return False
+        
+        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
+    
+    def __hash__(self):
+        """
+        Compute a hash value for the sensor based on its attributes.
+        Only hashes the unchanging attributes of the sensor. 
+
+        Returns:
+            int: Hash value of the sensor.
+        """
+        return hash((self.short_name, self.poll_code, self.offset))
+    
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
+        spaces = "  " * (1 + indent)
+        return (
+            f"{"  " * indent}Sensor {{\n" +
+            f"{spaces} Short Name: {self.short_name}\n" +
+            f"{spaces} Name: {self.name}\n" + 
+            f"{spaces} Size: {self.size}\n" + 
+            f"{spaces} Data Type: {self.data_type}\n" +
+            f"{spaces} Unit: {self.unit}\n" +
+            f"{spaces} Poll Code: {self.poll_code}\n" +
+            f"{spaces} Offset: {self.offset}\n" +
+            f"{"  " * indent}}}"
+        )
+
+    
+    def __str__(self):
+        """
+        Return a string representation of the sensor.
+
+        Returns:
+            str: String representation of the sensor's attributes.
+        """
+        return self.pretty_print()
