@@ -29,3 +29,19 @@ def flight_computer_rev2_controller() -> Controller:
         sensor_frame_size=120,
         sensor_data_file="output/flight_comp_rev2_sensor_data.txt"
     )
+
+def flight_ground_station_controller() -> Controller:
+    """
+    Create and return a controller for the Flight Computer Rev 2.0.
+
+    Returns:
+        Controller: Configured controller instance for the Flight Computer Rev 2.0.
+    """
+    return Controller(
+        id=b"\xA0",
+        name="Flight Ground Station",
+        poll_codes={},
+        sensor_frame_size=0,
+        sensor_data_file=""
+    )
+
