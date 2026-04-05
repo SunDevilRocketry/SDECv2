@@ -17,16 +17,16 @@ def appa_firmware() -> Firmware:
         preset_file="",
     )
 
-def flight_transmitter_firmware() -> Firmware:
+def receiver_firmware() -> Firmware:
     """
-    Create and return a Firmware for the Ground Station Flight Transmitter Firmware.
+    Create and return a Firmware for the Receiver Firmware.
 
     Returns:
-        Firemware: Configured firmware instance for the Ground Station Flight Transmitter Firmware.
+        Firemware: Configured firmware instance for the Receiver Firmware.
     """
     return Firmware(
-        id=b"\x07",
-        name="Flight Transmitter Firmware",
+        id=b"\x11",
+        name="Receiver Firmware",
         preset_frame_size=0,
         preset_file="",
     )
