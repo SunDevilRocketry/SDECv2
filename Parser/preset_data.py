@@ -40,6 +40,7 @@ class PresetData:
     feature_bitmask: FeatureBitmask
     data_bitmask: DataBitmask
     config_data: list[DataEntry]
+    lora_data: list[DataEntry]
     imu_data: list[DataEntry]
     baro_data: list[DataEntry]
     servo_data: list[DataEntry]
@@ -61,6 +62,7 @@ class PresetData:
             f"{spaces}Feature Bitmask: {self.feature_bitmask}\n" + 
             f"{spaces}Data Bitmask: {self.data_bitmask}\n" +
             f"{spaces}Config Data: \n{"\n".join(spaces + "  " + str(entry) for entry in self.config_data)}\n" +
+            f"{spaces}LoRA Data: \n{"\n".join(spaces + "  " + str(entry) for entry in self.lora_data)}\n" +
             f"{spaces}IMU Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.imu_data)}\n" +
             f"{spaces}Baro Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.baro_data)}\n" +
             f"{spaces}Servo Preset: \n{"\n".join(spaces + "  " + str(entry) for entry in self.servo_data)}\n"
@@ -123,6 +125,7 @@ class PresetData:
             "Feature Bitmask": feature_bitmask,
             "Data Bitmask": data_bitmask,
             "Config Data": [format_entry(entry) for entry in self.config_data],
+            "LoRA Data": [format_entry(entry) for entry in self.lora_data],
             "IMU Data": [format_entry(entry) for entry in self.imu_data],
             "Baro Data": [format_entry(entry) for entry in self.baro_data],
             "Servo Data": [format_entry(entry) for entry in self.servo_data]

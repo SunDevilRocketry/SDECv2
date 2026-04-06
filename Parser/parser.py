@@ -68,6 +68,9 @@ class Parser:
         config_data_json: list[dict] = json_input.get("Config Data", [])
         if config_data_json == []: raise ValueError("Error: No Config Data")
 
+        lora_data_json: list[dict] = json_input.get("LoRA Data", [])
+        if lora_data_json == []: raise ValueError("Error: No LoRA Data")
+
         imu_data_json: list[dict] = json_input.get("IMU Data", [])
         if imu_data_json == []: raise ValueError("Error: No IMU Data")
 
@@ -134,12 +137,14 @@ class Parser:
         data_bitmask = "0" * (8 - len(data_bitmask)) + data_bitmask
 
         data_config, config_data = make_entries(config_data_json)
+        lora_config, lora_data = make_entries(lora_data_json)
         imu_config, imu_data = make_entries(imu_data_json)
         baro_config, baro_data = make_entries(baro_data_json)
         servo_config, servo_data = make_entries(servo_data_json)
 
         preset_config = PresetConfig(
             data_config=data_config,
+            lora_config=lora_config,
             imu_config=imu_config,
             baro_config=baro_config,
             servo_config=servo_config
@@ -149,6 +154,7 @@ class Parser:
             feature_bitmask=appa_feature_bitmask_from_bits(feature_bitmask),
             data_bitmask=appa_data_bitmask_from_bits(data_bitmask),
             config_data=config_data,
+            lora_data=lora_data,
             imu_data=imu_data,
             baro_data=baro_data,
             servo_data=servo_data
@@ -230,6 +236,9 @@ class Parser:
         
         config_data = set_data_entries(0, self.preset_config.data_config)
         vals_idx = len(config_data)
+
+        lora_data = set_data_entries(vals_idx, self.preset_config.lora_config)
+        vals_idx = len(lora_data)
         
         imu_data = set_data_entries(vals_idx, self.preset_config.imu_config)
         vals_idx += len(imu_data)
@@ -243,6 +252,7 @@ class Parser:
             feature_bitmask=feature_bitmask,
             data_bitmask=data_bitmask,
             config_data=config_data,
+            lora_data=lora_data,
             imu_data=imu_data,
             baro_data=baro_data,
             servo_data=servo_data

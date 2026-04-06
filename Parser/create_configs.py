@@ -10,11 +10,11 @@ from SDECv2.BaseController import BaseSensor
 
 def appa_feature_bitmask() -> FeatureBitmask:
     """
-    Create and return a feature bitmask for v2.6.0 APPA of the Flight Computer Rev 2 Firmware.
+    Create and return a feature bitmask for APPA v2.6.0 of the Flight Computer Rev 2 Firmware.
 
     Returns:
         FeatureBitmask: Configured feature bitmask instance.
-    """
+    """ 
     features = [
         Feature(
             name="Data Logging",
@@ -176,7 +176,7 @@ def appa_data_bitmask_from_bits(bits: str) -> DataBitmask:
 
 def appa_preset_config() -> PresetConfig:
     """
-    Create and return the default PresetConfig for v2.6.0 APPA of the Flight Computer Rev 2 Firmware.
+    Create and return the default PresetConfig for APPA v2.6.0 of the Flight Computer Rev 2 Firmware.
 
     Returns:
         PresetConfig: The default PresetConfig.
@@ -200,6 +200,13 @@ def appa_preset_config() -> PresetConfig:
             ConfigEntry("AC P/Y PID P const", 4, float),
             ConfigEntry("AC P/Y PID I const", 4, float),
             ConfigEntry("AC P/Y PID D const", 4, float)
+        ],
+        lora_config=[
+            ConfigEntry("Spreading Factor", 1, int),
+            ConfigEntry("Bandwidth", 1, int),
+            ConfigEntry("Error Coding", 1, int),
+            ConfigEntry("Enable High Power Mode", 1, int),
+            ConfigEntry("Frequency", 4, int)
         ],
         imu_config=[
             ConfigEntry("Accel x offset", 4, float),
