@@ -1,3 +1,5 @@
+from time import sleep
+
 from Parser import Parser, PresetConfig, DataBitmask, FeatureBitmask, create_configs
 from SerialController import SerialObj
 
@@ -10,7 +12,7 @@ def test_preset():
 
 def test_flash_extract():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM6", 921600, 1)
+    serial_connection.init_comport("COM4", 921600, 1)
     serial_connection.open_comport()
 
     appa_preset_config = create_configs.appa_preset_config()
@@ -25,16 +27,16 @@ def test_flash_extract():
 
 def test_upload_preset():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.init_comport("COM4", 921600, 1)
     serial_connection.open_comport()
 
-    parser = Parser.upload_preset(serial_connection, path="a_input/to_upload_preset.json")
+    parser = Parser.upload_preset(serial_connection, path="a_input/appa_lora_preset.json")
 
     serial_connection.close_comport()
 
 def test_download_preset():
     serial_connection = SerialObj()
-    serial_connection.init_comport("COM5", 921600, 1)
+    serial_connection.init_comport("COM4", 921600, 1)
     serial_connection.open_comport()
 
     appa_preset_config = create_configs.appa_preset_config()
@@ -68,5 +70,21 @@ def test_from_file_flash_extract():
 
     serial_connection.close_comport()
 
+def test_upload_download():
+    serial_connection = SerialObj()
+    serial_connection.init_comport("COM4", 921600, 1)
+    serial_connection.open_comport()
+
+    parser = Parser.upload_preset(serial_connection, path="a_input/appa_lora_preset.json")
+    print("uploaded appa_lora_preset.json")
+    sleep(1)
+    parser.download_preset(serial_connection, path="a_output/downloaded_preset.json")
+    print("downloaded downloaded_preset.json")
+    sleep(1)
+    parser.flash_extract(serial_connection)
+    print("extracted flash")
+
+    serial_connection.close_comport()
+
 if __name__ == "__main__":
-    test_flash_extract()
+    test_upload_download()

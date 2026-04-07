@@ -159,5 +159,9 @@ class PresetData:
                             case 4: data.extend(struct.pack("<I", entry.value))
 
         entries_to_bytes(self.config_data)
+        entries_to_bytes(self.lora_data)
+        entries_to_bytes(self.imu_data)
+        entries_to_bytes(self.baro_data)
+        entries_to_bytes(self.servo_data)
 
         return data

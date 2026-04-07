@@ -238,7 +238,7 @@ class Parser:
         vals_idx = len(config_data)
 
         lora_data = set_data_entries(vals_idx, self.preset_config.lora_config)
-        vals_idx = len(lora_data)
+        vals_idx += len(lora_data)
         
         imu_data = set_data_entries(vals_idx, self.preset_config.imu_config)
         vals_idx += len(imu_data)
