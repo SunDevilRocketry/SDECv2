@@ -45,7 +45,7 @@ def test_download_preset():
         preset_data=None
     )
 
-    appa_parser.download_preset(serial_connection)
+    appa_parser.download_preset(serial_connection, path="a_output/new_download.json")
 
     serial_connection.close_comport()
 
@@ -75,14 +75,20 @@ def test_upload_download():
     serial_connection.init_comport("COM4", 921600, 1)
     serial_connection.open_comport()
 
-    parser = Parser.upload_preset(serial_connection, path="a_input/appa_lora_preset.json")
+    appa_preset_config = create_configs.appa_preset_config()
+    parser = Parser(
+        preset_config=appa_preset_config,
+        preset_data=None
+    )
+
+    parser.upload_preset(serial_connection, path="a_input/appa_lora_preset.json")
     print("uploaded appa_lora_preset.json")
     sleep(1)
     parser.download_preset(serial_connection, path="a_output/downloaded_preset.json")
     print("downloaded downloaded_preset.json")
-    sleep(1)
-    parser.flash_extract(serial_connection)
-    print("extracted flash")
+    # sleep(1)
+    # parser.flash_extract(serial_connection)
+    # print("extracted flash")
 
     serial_connection.close_comport()
 

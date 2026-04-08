@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 @dataclass
 class DataEntry:
     """
-    Represents a data entry with metadta name, size, data type, and value.
+    Represents a data entry with metadata name, size, data type, and value.
     Provides methods for string representation.
     """
 
@@ -98,6 +98,15 @@ class PresetData:
 
         object.__setattr__(self, "checksum", crc32c.crc32(payload) & 0xFFFFFFFF)
 
+    @classmethod
+    def format_entry(cls, entry: DataEntry) -> dict:
+        return {
+            "Name": entry.name,
+            "Size": entry.size,
+            "Data Type": "int" if entry.data_type is builtins.int else "float",
+            "Value": entry.value
+        }
+
     def save_preset(self, path: str="a_input/appa_preset.json") -> None:
         """
         Save the preset data to a JSON file.
@@ -112,43 +121,34 @@ class PresetData:
         data_bitmask = {}
         for data in self.data_bitmask.datas:
             data_bitmask[data.name] = True if data.bit() == "1" else False
-        
-        def format_entry(entry: DataEntry):
-            return {
-                "Name": entry.name,
-                "Size": entry.size,
-                "Data Type": "int" if entry.data_type is builtins.int else "float",
-                "Value": entry.value
-            }
 
         json_output = {
             "Feature Bitmask": feature_bitmask,
             "Data Bitmask": data_bitmask,
-            "Config Data": [format_entry(entry) for entry in self.config_data],
-            "LoRA Data": [format_entry(entry) for entry in self.lora_data],
-            "IMU Data": [format_entry(entry) for entry in self.imu_data],
-            "Baro Data": [format_entry(entry) for entry in self.baro_data],
-            "Servo Data": [format_entry(entry) for entry in self.servo_data]
+            "Config Data": [self.format_entry(entry) for entry in self.config_data],
+            "LoRA Data": [self.format_entry(entry) for entry in self.lora_data],
+            "IMU Data": [self.format_entry(entry) for entry in self.imu_data],
+            "Baro Data": [self.format_entry(entry) for entry in self.baro_data],
+            "Servo Data": [self.format_entry(entry) for entry in self.servo_data]
         }
 
         with open(path, "w") as f:
             json.dump(json_output, f, indent=4)
 
-    def to_bytes(self) -> bytes:
+    @classmethod
+    def entries_to_bytes(cls, entries: list[DataEntry]) -> bytearray:
         """
-        Convert the preset data to a byte array.
+        Convert an entry list with metadta to a byte array for sending over serial.
+
+        Args:
+            entries (list[DataEntry]): A list of DataEntry objects with metadata.
 
         Returns:
-            bytes: Byte array representation of the preset data.
+            bytes: Byte array representation of the entry data.
         """
         data = bytearray()
 
-        data.extend(struct.pack("<I", self.checksum))
-        data.extend(struct.pack("<I", self.feature_bitmask.to_int()))
-        data.extend(struct.pack("<I", self.data_bitmask.to_int()))
-
-        def entries_to_bytes(entries: list[DataEntry]):
-            for entry in entries:
+        for entry in entries:
                 match entry.data_type:
                     case builtins.float:
                         data.extend(struct.pack("<f", entry.value))
@@ -157,11 +157,4 @@ class PresetData:
                             case 1: data.extend(struct.pack("<B", entry.value))
                             case 2: data.extend(struct.pack("<H", entry.value))
                             case 4: data.extend(struct.pack("<I", entry.value))
-
-        entries_to_bytes(self.config_data)
-        entries_to_bytes(self.lora_data)
-        entries_to_bytes(self.imu_data)
-        entries_to_bytes(self.baro_data)
-        entries_to_bytes(self.servo_data)
-
         return data

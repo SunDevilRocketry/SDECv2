@@ -67,6 +67,29 @@ class PresetConfig:
         """
         return self.pretty_print()
     
+    def get_entry_struct_format(self, entries: list[ConfigEntry]) -> str:
+        """
+        Return a formatted string representation of an entry list.
+
+        Args:
+            entries (list[ConfigEntry]): A list of preset config entries that make up one Entry into the Config.
+
+        Returns:
+            str: Formatted string representation of the entire config entry list.
+        """
+        struct_format = ""
+        for entry in entries:
+            match entry.data_type:
+                case builtins.float: 
+                    struct_format += "f"
+                case builtins.int:
+                    match entry.size:
+                        case 1: struct_format += "B"
+                        case 2: struct_format += "H"
+                        case 4: struct_format += "I"
+
+        return struct_format
+    
     def __post_init__(self):
         """
         Initialize the structure format string based on the configuration entries.
@@ -75,19 +98,8 @@ class PresetConfig:
         self.struct_format += "I" # Feature Bitmask
         self.struct_format += "I" # Data Bitmask 
 
-        def add_entries(entries: list[ConfigEntry]):
-            for entry in entries:
-                match entry.data_type:
-                    case builtins.float: 
-                        self.struct_format += "f"
-                    case builtins.int:
-                        match entry.size:
-                            case 1: self.struct_format += "B"
-                            case 2: self.struct_format += "H"
-                            case 4: self.struct_format += "I"
-                
-        add_entries(self.data_config)
-        add_entries(self.lora_config)
-        add_entries(self.imu_config)
-        add_entries(self.baro_config)
-        add_entries(self.servo_config)
+        self.struct_format += self.get_entry_struct_format(self.data_config)
+        self.struct_format += self.get_entry_struct_format(self.lora_config)
+        self.struct_format += self.get_entry_struct_format(self.imu_config)
+        self.struct_format += self.get_entry_struct_format(self.baro_config)
+        self.struct_format += self.get_entry_struct_format(self.servo_config)
