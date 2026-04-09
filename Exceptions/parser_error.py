@@ -1,7 +1,7 @@
-from Exception import sdec_error
+from .sdec_error import SDECError
 
 
-class ParserError(sdec_error):
+class ParserError(SDECError):
     """Exception raised when required parser has error."""
     
     def __init__(self, message):
@@ -9,4 +9,4 @@ class ParserError(sdec_error):
         super().__init__(self.message)
     
     def __str__(self):
-        super().str()
+        return super().__str__()

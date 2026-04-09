@@ -17,10 +17,10 @@ from .preset_data import PresetData, DataEntry
 from .toggle import Toggle
 from SDECv2.SerialController import SerialObj
 from typing import List
-from Exception.sdec_error import SDECError
-from Exception.invalid_data_error import InvalidDataError
-from Exception.missing_data_error import MissingDataError
-from Exception.parser_error import Parser, ParserError
+from SDECv2.Exceptions import SDECError
+from SDECv2.Exceptions import InvalidDataError 
+from SDECv2.Exceptions import MissingDataError
+from SDECv2.Exceptions import ParserError
 
 FLASH_SIZE = 524288
 
@@ -55,7 +55,7 @@ class Parser:
         if baro_data_json == []: raise MissingDataError("Error: No Baro Data")
 
         servo_data_json: list[dict] = json_input.get("Servo Data", [])
-        if servo_data_json == []: raise MissingDataError("Error: No Servo Data") #missing data ^^^
+        if servo_data_json == []: raise MissingDataError("Error: No Servo Data") 
 
         def make_entries(entries: list[dict]):
             config_entries: list[ConfigEntry] = []
@@ -63,24 +63,24 @@ class Parser:
 
             for entry in entries:
                 name = str(entry.get("Name"))
-                if name == "": raise InvalidDataError("Error: No Entry name") #invalid data
+                if name == "": raise InvalidDataError("Error: No Entry name") 
 
                 size = entry.get("Size", 0)
-                if size == 0: raise InvalidDataError("Error: No Entry size") #invalid data
+                if size == 0: raise InvalidDataError("Error: No Entry size") 
                 size = int(size)
                 
                 data_type = entry.get("Data Type")
                 match data_type:
                     case "int": data_type = int
                     case "float": data_type = float
-                    case _: raise InvalidDataError("Error: No or invalid Entry data type")  #invalid data
+                    case _: raise InvalidDataError("Error: No or invalid Entry data type")  
                 
                 value = entry.get("Value", "")
-                if value == "": raise InvalidDataError("Error: No Entry value") #invalid data
+                if value == "": raise InvalidDataError("Error: No Entry value") 
                 match data_type:
                     case builtins.int: value = int(value)
                     case builtins.float: value = float(value)
-                    case _: raise InvalidDataError("Error: Invalid Entry data type") #invalid data
+                    case _: raise InvalidDataError("Error: Invalid Entry data type")
                 
                 config_entries.append(
                     ConfigEntry(

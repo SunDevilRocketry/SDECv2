@@ -1,7 +1,7 @@
-from Exception import sdec_error
+from .sdec_error import SDECError
 
 
-class InvalidDataError(sdec_error):
+class InvalidDataError(SDECError):
     """Exception raised when required data is invalid."""
     
     def __init__(self, message):
@@ -9,4 +9,4 @@ class InvalidDataError(sdec_error):
         super().__init__(self.message)
     
     def __str__(self):
-        super().str()
+        return super().__str__()

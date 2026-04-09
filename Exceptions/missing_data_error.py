@@ -1,8 +1,7 @@
-from Exception import sdec_error
-#for imu, baro, servo, config, and bitmask data
+from .sdec_error import SDECError
 
 
-class MissingDataError(sdec_error):
+class MissingDataError(SDECError):
     """Exception raised when required data is missing."""
     
     def __init__(self, message):
@@ -10,4 +9,4 @@ class MissingDataError(sdec_error):
         super().__init__(self.message)
     
     def __str__(self):
-        super().str()
+       return super().__str__()
