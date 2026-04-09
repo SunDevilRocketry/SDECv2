@@ -17,6 +17,10 @@ from .preset_data import PresetData, DataEntry
 from .toggle import Toggle
 from SDECv2.SerialController import SerialObj
 from typing import List
+from SDECv2.Exceptions import SDECError
+from SDECv2.Exceptions import InvalidDataError 
+from SDECv2.Exceptions import MissingDataError
+from SDECv2.Exceptions import ParserError
 
 FLASH_SIZE = 524288
 
@@ -57,25 +61,25 @@ class Parser:
             json_input = json.load(f)
 
         if json_input is None:
-            raise ValueError("Error: No JSON found")
+            raise FileNotFoundError("Error: No JSON found")
 
         feature_bitmask_json: dict = json_input.get("Feature Bitmask", {})
-        if feature_bitmask_json == {}: raise ValueError("Error: No Feature Bitmask")
+        if feature_bitmask_json == {}: raise MissingDataError("Error: No Feature Bitmask")
 
         data_bitmask_json: dict = json_input.get("Data Bitmask", {})
-        if data_bitmask_json == {}: raise ValueError("Error: No Data Bitmask")
+        if data_bitmask_json == {}: raise MissingDataError("Error: No Data Bitmask")
 
         config_data_json: list[dict] = json_input.get("Config Data", [])
-        if config_data_json == []: raise ValueError("Error: No Config Data")
+        if config_data_json == []: raise MissingDataError("Error: No Config Data")
 
         imu_data_json: list[dict] = json_input.get("IMU Data", [])
-        if imu_data_json == []: raise ValueError("Error: No IMU Data")
+        if imu_data_json == []: raise MissingDataError("Error: No IMU Data")
 
         baro_data_json: list[dict] = json_input.get("Baro Data", [])
-        if baro_data_json == []: raise ValueError("Error: No Baro Data")
+        if baro_data_json == []: raise MissingDataError("Error: No Baro Data")
 
         servo_data_json: list[dict] = json_input.get("Servo Data", [])
-        if servo_data_json == []: raise ValueError("Error: No Servo Data")
+        if servo_data_json == []: raise MissingDataError("Error: No Servo Data") 
 
         def make_entries(entries: list[dict]):
             config_entries: list[ConfigEntry] = []
@@ -83,24 +87,24 @@ class Parser:
 
             for entry in entries:
                 name = str(entry.get("Name"))
-                if name == "": raise ValueError("Error: No Entry name")
+                if name == "": raise InvalidDataError("Error: No Entry name") 
 
                 size = entry.get("Size", 0)
-                if size == 0: raise ValueError("Error: No Entry size")
+                if size == 0: raise InvalidDataError("Error: No Entry size") 
                 size = int(size)
                 
                 data_type = entry.get("Data Type")
                 match data_type:
                     case "int": data_type = int
                     case "float": data_type = float
-                    case _: raise ValueError("Error: No or invalid Entry data type") 
+                    case _: raise InvalidDataError("Error: No or invalid Entry data type")  
                 
                 value = entry.get("Value", "")
-                if value == "": raise ValueError("Error: No Entry value")
+                if value == "": raise InvalidDataError("Error: No Entry value") 
                 match data_type:
                     case builtins.int: value = int(value)
                     case builtins.float: value = float(value)
-                    case _: raise ValueError("Error: Invalid Entry data type")
+                    case _: raise InvalidDataError("Error: Invalid Entry data type")
                 
                 config_entries.append(
                     ConfigEntry(
@@ -325,7 +329,7 @@ class Parser:
         parser = Parser.from_file(path=path)
  
         if parser.preset_data is None: 
-            raise ValueError("Error: Failed to create preset data from file")
+            raise ParserError("Error: Failed to create preset data from file")
         
         data = parser.preset_data.to_bytes()
 
@@ -384,7 +388,7 @@ class Parser:
         
         flash_extract_preset = self._parse_preset(preset_bytes)
         
-        if flash_extract_preset is None: raise ValueError("Erorr: Failed to parse preset")
+        if flash_extract_preset is None: raise ParserError("Erorr: Failed to parse preset")
 
         if preset_path != "": flash_extract_preset.save_preset(path=preset_path)
             
