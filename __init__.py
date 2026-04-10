@@ -6,3 +6,10 @@ from .BaseController import BaseController, BaseSensor, Controller, Firmware, cr
 from .Parser import Parser, PresetConfig, PresetData, Feature, FeatureBitmask, DataBitmask, Data, create_configs
 from .Sensor import Sensor, SensorSentry, create_sensors, util, conv_functions
 from .SerialController import SerialObj, SerialSentry, Comport
+from .EngineController import (
+    EngineState, ENGINE_STATE_NAMES, Valve, VALVES, parse_valve_byte,
+    TelemetryData, EngineControllerFlashFrame,
+    hotfire_abort, preflight_purge, fill_chill, standby, hotfire,
+    stop_hotfire, stop_purge, lox_purge, manual_mode,
+    get_state, telemetry_request, flash_extract,
+)
