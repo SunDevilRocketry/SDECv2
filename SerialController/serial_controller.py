@@ -6,7 +6,7 @@ import serial.tools.list_ports
 
 from .comport import Comport, Status
 from typing import List
-from BaseController import Controller
+from SDECv2.BaseController import BaseController
 
 class SerialObj:
     """
@@ -17,7 +17,7 @@ class SerialObj:
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
-        self.controller: Controller = None
+        self.target: BaseController = None
 
     def available_comports(self) -> List[str]:
         """
