@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import enum
 import struct
+import math
 from dataclasses import dataclass, asdict
 from typing import ClassVar
 from SDECv2.SerialController import SerialObj
@@ -84,8 +85,8 @@ class DashboardDumpType:
     temp: float
     alt: float
     bvelo: float
-    longitude: float
-    latitude: float
+    long: float
+    lat: float
 
     @classmethod
     def parse(cls, data: bytes) -> DashboardDumpType:
@@ -96,8 +97,17 @@ class DashboardDumpType:
         unpacked = struct.unpack(cls.STRUCT, data[:DASHBOARD_DUMP_TYPE_SIZE])
         return cls(*unpacked)
     
+    def _validate_floats(self, value: float | Any) -> float | None | Any:
+        if isinstance(value, float):
+            if not math.isfinite(value):
+                return None  # or 0.0 depending on your needs
+        return value
+
     def to_json(self) -> dict[str, Any]:
-        return asdict(self)
+        raw = asdict(self)
+        for k, v in raw.items():
+            raw[k] = self._validate_floats(v)
+        return raw
 
 @dataclass(frozen=True)
 class LoRaMsgVehicleIdType:
