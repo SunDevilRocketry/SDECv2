@@ -18,7 +18,7 @@ def test_dashboard_dump():
 
     if( serial_connection.target.controller.id == b'\x05' ):
         # FC version
-        telem_obj.dashboard_dump()
+        telem_obj.dashboard_dump(serial_connection)
         print(telem_obj.get_latest_dashboard_dump())
     else:
         # Other platforms
