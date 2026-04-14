@@ -109,6 +109,12 @@ class SerialObj:
             return b""
         
     def connect(self) -> None:
+        """
+        Sends the connect command and sets this SerialObj's target field based on the response.
+        
+        Returns:
+            None
+        """
         # send connect opcode
         self.send(b'\x02')
 
