@@ -274,8 +274,8 @@ class Telemetry:
                     self.last_dashboard_dump = parsed.dashboard_dump.data
                 elif( parsed.header.mid_enum == LoRaMessageTypes.VEHICLE_ID ):
                     self.last_wireless_stats = {
-                    "target": create_controllers.create_controller(parsed.vehicle_id.hw_opcode).name,
-                    "firmware": create_firmwares.create_firmware(parsed.vehicle_id.fw_opcode).name,
+                    "target": create_controllers.create_controller(parsed.vehicle_id.hw_opcode.to_bytes(1)).name,
+                    "firmware": create_firmwares.create_firmware(parsed.vehicle_id.fw_opcode.to_bytes(1)).name,
                     "latency": self.last_wireless_stats["latency"],
                     "sig_strength": 0,
                     "status": "OK"
