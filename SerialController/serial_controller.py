@@ -17,7 +17,7 @@ class SerialObj:
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
-        self.target: BaseController = None
+        self.target: BaseController | None = None
 
     def available_comports(self) -> List[str]:
         """
