@@ -3,6 +3,18 @@
 
 from .firmware import Firmware
 
+def create_firmware(firmware_id) -> Firmware:
+    """
+    Create and return a firmware object matching a given firmware code.
+
+    Returns:
+        Firmware for the given ID.
+    """
+    if( firmware_id == b'\x06' ):
+        return appa_firmware()
+    elif( firmware_id == b'\x11' ):
+        return receiver_firmware()
+
 def appa_firmware() -> Firmware:
     """
     Create and return a Firmware for the v2.5.0 APPA Flight Comptuer Firmware
