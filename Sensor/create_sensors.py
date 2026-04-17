@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
-from .conv_functions import imu_accel, imu_gyro, baro_press
+from .conv_functions import imu_accel, imu_gyro, baro_press, pt_pressure, pt_pressure_5V, tc_temp, loadcell_force
 from .sensor import Sensor
 from typing import List
 
@@ -79,6 +79,50 @@ def rev2_dashboard_dump_sensors() -> List[Sensor]:
 
         (b"\x1B", "long", "GPS Longitude (deg)", 4, float, "deg", None),
         (b"\x1C", "lat", "GPS Latitude (deg)", 4, float, "deg", None),
+    ]
+
+    sensors: List[Sensor] = []
+    offset = 0
+
+    for poll_code, short_name, name, size, data_type, unit, conv_func in sensor_tuples:
+        sensors.append(Sensor(short_name, name, size, data_type, unit, conv_func, poll_code, offset))
+        offset += size
+
+    return sensors
+
+def engine_controller_rev5_sensors() -> List[Sensor]:
+    """Create the sensor list for the Liquid Engine Controller (L0002 Rev 5.0).
+
+    Returns 10 sensors in poll-code order (``0x00``–``0x09``)::
+
+        pt0  LOX Pressure          psi
+        pt1  LOX Flow Upstream     psi
+        pt2  LOX Flow Downstream   psi
+        pt3  PT3                   psi
+        pt4  Engine Pressure       psi
+        pt5  Fuel Flow Downstream  psi
+        pt6  Fuel Flow Upstream    psi
+        pt7  Fuel Pressure         psi
+        tc   Thermocouple          °C
+        lc   Load Cell             lb
+
+    All sensors carry raw ``int`` values (4 bytes each) with their
+    respective conversion functions pre-attached.
+
+    :returns: Ordered list of :class:`~SDECv2.Sensor.sensor.Sensor` objects.
+    :rtype: List[Sensor]
+    """
+    sensor_tuples = [
+        (b"\x00", "pt0", "LOX Pressure",        4, int, "psi", pt_pressure),
+        (b"\x01", "pt1", "LOX Flow Upstream",    4, int, "psi", pt_pressure),
+        (b"\x02", "pt2", "LOX Flow Downstream",  4, int, "psi", pt_pressure),
+        (b"\x03", "pt3", "PT3",                  4, int, "psi", pt_pressure),
+        (b"\x04", "pt4", "Engine Pressure",      4, int, "psi", pt_pressure),
+        (b"\x05", "pt5", "Fuel Flow Downstream", 4, int, "psi", pt_pressure),
+        (b"\x06", "pt6", "Fuel Flow Upstream",   4, int, "psi", pt_pressure),
+        (b"\x07", "pt7", "Fuel Pressure",        4, int, "psi", pt_pressure),
+        (b"\x08", "tc",  "Thermocouple",         4, int, "C",   tc_temp),
+        (b"\x09", "lc",  "Load Cell",            4, int, "lb",  loadcell_force),
     ]
 
     sensors: List[Sensor] = []
