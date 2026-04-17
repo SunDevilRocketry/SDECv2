@@ -100,7 +100,7 @@ class DashboardDumpType:
     def _validate_floats(self, value: float | Any) -> float | None | Any:
         if isinstance(value, float):
             if not math.isfinite(value):
-                return None  # or 0.0 depending on your needs
+                return 0.0  # or 0.0 depending on your needs
         return value
 
     def to_json(self) -> dict[str, Any]:
@@ -273,13 +273,20 @@ class Telemetry:
                 if( parsed.header.mid_enum == LoRaMessageTypes.DASHBOARD_DATA ):
                     self.last_dashboard_dump = parsed.dashboard_dump.data
                 elif( parsed.header.mid_enum == LoRaMessageTypes.VEHICLE_ID ):
-                    self.last_wireless_stats = {
-                    "target": create_controllers.create_controller(parsed.vehicle_id.hw_opcode.to_bytes(1)).name,
-                    "firmware": create_firmwares.create_firmware(parsed.vehicle_id.fw_opcode.to_bytes(1)).name,
-                    "latency": self.last_wireless_stats["latency"],
-                    "sig_strength": 0,
-                    "status": "OK"
-                    }
+                    hw = parsed.vehicle_id.hw_opcode.to_bytes(1)
+                    fw = parsed.vehicle_id.fw_opcode.to_bytes(1)
+                    try:
+                        self.last_wireless_stats = {
+                            "target": create_controllers.create_controller(hw).name,
+                            "firmware": create_firmwares.create_firmware(fw).name,
+                            "latency": self.last_wireless_stats["latency"],
+                            "sig_strength": 0,
+                            "status": "OK"
+                        }
+                    except (ValueError, TypeError, AttributeError) as e:
+                        print("Malformed vehicle ID message received. Discarding.")
+                        print(f"HW: {hw}; FW: {fw};")
+
     
     def get_latest_dashboard_dump(self) -> dict[str, Any] | None:
         with( self.telem_lock ):
