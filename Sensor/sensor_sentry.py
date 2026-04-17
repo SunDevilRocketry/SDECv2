@@ -4,6 +4,9 @@
 import math
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from .create_sensors import rev2_dashboard_dump_sensors
 from .sensor import Sensor
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
@@ -97,6 +100,82 @@ class SensorSentry:
             time.sleep(0.2)
             # Resume poll code
             serial_connection.send(b"\xEF")
+
+    def plot(self,
+             serial_connection: SerialObj,
+             timeout: int | None = None,
+             count: int | None = None,
+             sensors: Optional[List[Sensor]] = None
+             ) -> None:
+        if len(self.sensors) == 0:
+            print("Sentry has no sensors")
+            return
+
+        sensors_to_plot = sensors if sensors is not None else self.sensors
+
+        # Sensor opcode
+        serial_connection.send(b"\x03")
+
+        # Poll subcommand code
+        serial_connection.send(b"\x02")
+
+        num_sensors = len(self.sensors)
+        serial_connection.send(num_sensors.to_bytes(1, "big"))
+
+        for sensor in self.sensors:
+            serial_connection.send(sensor.poll_code)
+
+        # Start poll code
+        serial_connection.send(b"\xF3")
+
+        time_data: List[float] = []
+        sensor_data: Dict[Sensor, List[float | int]] = {s: [] for s in sensors_to_plot}
+
+        start = time.time()
+        poll_count = 0
+        while timeout or count:
+            serial_connection.send(b"\x51")
+
+            data_bytes = serial_connection.read(self.size)
+            offset = 0
+            for sensor in self.sensors:
+                sensor_data_bytes = data_bytes[offset:offset + sensor.size]
+                converted = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
+                if sensor in sensor_data:
+                    sensor_data[sensor].append(converted if converted is not None else float("nan"))
+                offset += sensor.size
+
+            elapsed = time.time() - start
+            time_data.append(elapsed / 60.0)  # minutes
+
+            poll_count += 1
+
+            stop = False
+            if timeout and elapsed >= timeout:
+                serial_connection.send(b"\x74")
+                stop = True
+            elif count and poll_count >= count:
+                serial_connection.send(b"\x74")
+                stop = True
+
+            if stop:
+                break
+
+            serial_connection.send(b"\x44")
+            time.sleep(0.2)
+            serial_connection.send(b"\xEF")
+
+        time_arr = np.array(time_data)
+        for sensor in sensors_to_plot:
+            label = f"{sensor.short_name} ({sensor.unit})"
+            plt.plot(time_arr, np.array(sensor_data[sensor]), label=label)
+
+        plt.title("Sensor Data")
+        plt.xlabel("Time, min")
+        plt.ylabel("Measurement Value")
+        plt.grid()
+        plt.legend()
+        plt.show()
 
     def dump(self, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
         # Verify sentry has configured sensors
