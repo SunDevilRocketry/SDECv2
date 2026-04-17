@@ -6,9 +6,11 @@ SDECv2 is a recreation/upgrade of legacy SDEC. Replacing SDEC as of v2.0.0, with
 - flash extract
 
 ### Setup
-Before running:
-- pip install -e .
-- add the following to your .vscode/settings.json to prevent errors on SDECv2 internal imports
+Before running, compile the code:
+```
+pip install -e .
+```
+add the following to your .vscode/settings.json to prevent errors on SDECv2 internal imports
 ```
 {
   "python.analysis.extraPaths": [
