@@ -43,6 +43,51 @@ class Parser:
 
         self.sensor_struct_format = "<bbI" # save bit, FC state, time since launch
 
+    @staticmethod
+    def _make_entries(entries: list[dict]):
+        config_entries: list[ConfigEntry] = []
+        data_entries: list[DataEntry] = []
+
+        for entry in entries:
+            name = str(entry.get("Name"))
+            if name == "": raise ValueError("Error: No Entry name")
+
+            size = entry.get("Size", 0)
+            if size == 0: raise ValueError("Error: No Entry size")
+            size = int(size)
+            
+            data_type = entry.get("Data Type")
+            match data_type:
+                case "int": data_type = int
+                case "float": data_type = float
+                case _: raise ValueError("Error: No or invalid Entry data type") 
+            
+            value = entry.get("Value", "")
+            if value == "": raise ValueError("Error: No Entry value")
+            match data_type:
+                case builtins.int: value = int(value)
+                case builtins.float: value = float(value)
+                case _: raise ValueError("Error: Invalid Entry data type")
+            
+            config_entries.append(
+                ConfigEntry(
+                    name=name,
+                    size=size,
+                    data_type=data_type
+                )
+            )
+
+            data_entries.append(
+                DataEntry(
+                    name=name,
+                    size=size,
+                    data_type=data_type,
+                    value=value
+                )
+            )
+
+        return config_entries, data_entries
+
     @classmethod
     def from_file(cls, path: str) -> "Parser":
         """
@@ -71,6 +116,9 @@ class Parser:
 
         config_data_json: list[dict] = json_input.get("Config Data", [])
         if config_data_json == []: raise MissingDataError("Error: No Config Data")
+
+        lora_data_json: list[dict] = json_input.get("LoRA Data", [])
+        if lora_data_json == []: raise ValueError("Error: No LoRA Data")
 
         imu_data_json: list[dict] = json_input.get("IMU Data", [])
         if imu_data_json == []: raise MissingDataError("Error: No IMU Data")
@@ -134,16 +182,18 @@ class Parser:
         data_bitmask = ""
         for val in data_bitmask_json.values():
             bit = "1" if val else "0"
-            data_bitmask = bit + data_bitmask
+            data_bitmask = bit + data_bitmask 
         data_bitmask = "0" * (8 - len(data_bitmask)) + data_bitmask
 
-        data_config, config_data = make_entries(config_data_json)
-        imu_config, imu_data = make_entries(imu_data_json)
-        baro_config, baro_data = make_entries(baro_data_json)
-        servo_config, servo_data = make_entries(servo_data_json)
+        data_config, config_data = cls._make_entries(config_data_json)
+        lora_config, lora_data = cls._make_entries(lora_data_json)
+        imu_config, imu_data = cls._make_entries(imu_data_json)
+        baro_config, baro_data = cls._make_entries(baro_data_json)
+        servo_config, servo_data = cls._make_entries(servo_data_json)
 
         preset_config = PresetConfig(
             data_config=data_config,
+            lora_config=lora_config,
             imu_config=imu_config,
             baro_config=baro_config,
             servo_config=servo_config
@@ -153,6 +203,7 @@ class Parser:
             feature_bitmask=appa_feature_bitmask_from_bits(feature_bitmask),
             data_bitmask=appa_data_bitmask_from_bits(data_bitmask),
             config_data=config_data,
+            lora_data=lora_data,
             imu_data=imu_data,
             baro_data=baro_data,
             servo_data=servo_data
@@ -190,6 +241,23 @@ class Parser:
 
             datas_idx += 1
 
+    def _set_data_entries(self, vals, vals_idx: int, config_entries: list[ConfigEntry]) -> list[DataEntry]:
+            data_entries: list[DataEntry] = []
+            
+            for entry in config_entries:
+                val = vals[vals_idx]
+                data_entries.append(
+                    DataEntry(
+                        name=entry.name,
+                        size=entry.size,
+                        data_type=entry.data_type,
+                        value=val
+                    )
+                )
+                vals_idx += 1
+
+            return data_entries
+
     def _parse_preset(self, preset_bytes: bytes) -> PresetData:
         """
         Parse preset data from raw bytes.
@@ -215,38 +283,26 @@ class Parser:
         data_bitmask = appa_data_bitmask_from_bits(format(vals[2] & 0xFF, "08b")) 
 
         vals = vals[3:]  
-        def set_data_entries(vals_idx: int, config_entries: list[ConfigEntry]) -> list[DataEntry]:
-            data_entries: list[DataEntry] = []
-            
-            for entry in config_entries:
-                val = vals[vals_idx]
-                data_entries.append(
-                    DataEntry(
-                        name=entry.name,
-                        size=entry.size,
-                        data_type=entry.data_type,
-                        value=val
-                    )
-                )
-                vals_idx += 1
 
-            return data_entries
-        
-        config_data = set_data_entries(0, self.preset_config.data_config)
+        config_data = self._set_data_entries(vals, 0, self.preset_config.data_config)
         vals_idx = len(config_data)
-        
-        imu_data = set_data_entries(vals_idx, self.preset_config.imu_config)
+
+        lora_data = self._set_data_entries(vals, vals_idx, self.preset_config.lora_config)
+        vals_idx += len(lora_data)
+
+        imu_data = self._set_data_entries(vals, vals_idx, self.preset_config.imu_config)
         vals_idx += len(imu_data)
 
-        baro_data = set_data_entries(vals_idx, self.preset_config.baro_config)
+        baro_data = self._set_data_entries(vals, vals_idx, self.preset_config.baro_config)
         vals_idx += len(baro_data)
 
-        servo_data = set_data_entries(vals_idx, self.preset_config.servo_config)
+        servo_data = self._set_data_entries(vals, vals_idx, self.preset_config.servo_config)
 
         preset_data = PresetData(
             feature_bitmask=feature_bitmask,
             data_bitmask=data_bitmask,
             config_data=config_data,
+            lora_data=lora_data,
             imu_data=imu_data,
             baro_data=baro_data,
             servo_data=servo_data
@@ -268,6 +324,9 @@ class Parser:
             serial_connection (SerialObj): Serial connection to the Flight Computer.
             path (str): Path to save the downloaded preset JSON file.
         """
+        # clear serial buffer
+        serial_connection.reset_input_buffer()
+
         # preset opcode
         serial_connection.send(b"\x24")
         # download subcommand code
@@ -280,6 +339,34 @@ class Parser:
         preset_data = self._parse_preset(preset_bytes)
 
         preset_data.save_preset(path)
+
+    def download_lora_preset(self, serial_connection: SerialObj, path="a_output/downloaded_lora_preset.json") -> None:
+        """
+        Download the LoRA preset from the Flight Computer and save it to a file.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            path (str): Path to save the downloaded preset JSON file.
+        """
+        # preset opcode
+        serial_connection.send(b"\x31")
+        # download subcommand code
+        serial_connection.send(b"\x02")
+
+        lora_struct_format = self.preset_config.get_entry_struct_format(self.preset_config.lora_config)
+
+        lora_len = struct.calcsize(lora_struct_format)
+
+        lora_bytes = serial_connection.read(lora_len)
+
+        vals = struct.unpack(lora_struct_format, lora_bytes)
+
+        lora_data = self._set_data_entries(vals, 0, self.preset_config.lora_config)
+
+        json_output = {"LoRA Data": [PresetData.format_entry(entry) for entry in lora_data]}
+
+        with open(path, "w") as f:
+            json.dump(json_output, f, indent=4)
     
     def verify_preset(self, serial_connection: SerialObj) -> bool:
         """
@@ -331,16 +418,70 @@ class Parser:
         if parser.preset_data is None: 
             raise ParserError("Error: Failed to create preset data from file")
         
-        data = parser.preset_data.to_bytes()
+        preset_data = parser.preset_data
+       
+        # Convert checksum, feature bitmask, data bitmask, and config data to bytes
+        data = bytearray()
+        data.extend(struct.pack("<I", preset_data.checksum))
+        data.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
+        data.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
+        data.extend(preset_data.entries_to_bytes(preset_data.config_data))
 
         # preset opcode
         serial_connection.send(b"\x24")
         # upload subcommand code
         serial_connection.send(b"\x01")
+
+        config_bytes = preset_data.entries_to_bytes(preset_data.config_data)
+
+        wire = bytearray()
+        wire.extend(struct.pack("<I", preset_data.checksum))
+        wire.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
+        wire.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
+        wire.extend(config_bytes)
  
         serial_connection.send(data)
 
         return parser
+    
+    @classmethod
+    def upload_lora_preset(cls, serial_connection: SerialObj, path: str="a_input/lora_preset.json"):
+        """
+        Upload a LoRA preset to the Flight Computer from a JSON file.
+
+        Args:
+            serial_connection (SerialObj): Serial connection to the Flight Computer.
+            path (str): Path to the JSON file containing the preset data.
+
+        Returns:
+            Parser: A Parser instance initialized with the uploaded preset data.
+
+        Raises:
+            ValueError: If the preset data is invalid or the file does not exist.
+        """
+        if not os.path.exists(path): print(f"File {path} does not exist")
+
+        with open(path, "r") as f:
+            json_input = json.load(f)
+
+        if json_input is None:
+            raise ValueError("Error: No JSON found")
+
+        lora_data_json: list[dict] = json_input.get("LoRA Data", [])
+        if lora_data_json == []: raise ValueError("Error: No LoRA Data")
+
+        lora_config, lora_data = cls._make_entries(lora_data_json)
+       
+        # Convert LoRA data to bytes
+        data = bytearray()
+        data.extend(PresetData.entries_to_bytes(lora_data))
+
+        # preset opcode
+        serial_connection.send(b"\x31")
+        # upload subcommand code
+        serial_connection.send(b"\x01")
+ 
+        serial_connection.send(data)
     
     def flash_extract(self, serial_connection: SerialObj, preset_path: str="a_output/flash_extracted_preset.json", data_path: str="a_output/flash_extract.csv") -> List[FlashSensorFrame]:
         """

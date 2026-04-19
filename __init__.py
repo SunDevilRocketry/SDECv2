@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Sun Devil Rocketry
 
 # make Python recognize SDECv2 as a package
-from .BaseController import BaseController, BaseSensor, Controller, Firmware, create_controllers
-from .Parser import Parser, PresetConfig, PresetData, Feature, FeatureBitmask, DataBitmask, Data, create_configs
+from .BaseController import BaseController, BaseSensor, Controller, Firmware, create_controllers, create_firmwares
+from .Parser import Parser, PresetConfig, PresetData, Feature, FeatureBitmask, DataBitmask, Data, Telemetry, create_configs
 from .Sensor import Sensor, SensorSentry, create_sensors, util, conv_functions
 from .SerialController import SerialObj, SerialSentry, Comport

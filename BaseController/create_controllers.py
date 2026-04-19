@@ -5,6 +5,18 @@ from .controller import Controller
 from .base_sensor import BaseSensor
 from SDECv2.Sensor import create_sensors
 
+def create_controller(hardware_id) -> Controller:
+    """
+    Create and return a controller matching a given hardware code.
+
+    Returns:
+        Controller: for the given ID.
+    """
+    if( hardware_id == b'\x05' ):
+        return flight_computer_rev2_controller()
+    elif( hardware_id == b'\x10' ):
+        return ground_station_rev1_controller()
+
 def flight_computer_rev2_controller() -> Controller:
     """
     Create and return a controller for the Flight Computer Rev 2.0.

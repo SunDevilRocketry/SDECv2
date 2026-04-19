@@ -6,6 +6,7 @@ import serial.tools.list_ports
 
 from .comport import Comport, Status
 from typing import List
+from SDECv2.BaseController import BaseController, create_controllers, create_firmwares
 
 class SerialObj:
     """
@@ -16,6 +17,7 @@ class SerialObj:
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
+        self.target: BaseController | None = None
 
     def available_comports(self) -> List[str]:
         """
@@ -105,6 +107,24 @@ class SerialObj:
         except serial.SerialException as e:
             print(f"Error: {e}")
             return b""
+        
+    def connect(self) -> None:
+        """
+        Sends the connect command and sets this SerialObj's target field based on the response.
+        
+        Returns:
+            None
+        """
+        # send connect opcode
+        self.send(b'\x02')
+
+        # retrieve opcodes
+        hw = self.read(1)
+        fw = self.read(1)
+        
+        target = BaseController(create_controllers.create_controller(hw), create_firmwares.create_firmware(fw))
+
+        self.target = target
         
     def reset_input_buffer(self) -> None:
         """
