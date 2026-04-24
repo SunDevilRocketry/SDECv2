@@ -41,7 +41,7 @@ class Parser:
         self.preset_config = preset_config
         self.preset_data = preset_data
 
-        self.sensor_struct_format = "<bbI" # save bit, FC state, time since launch
+        self.sensor_struct_format = "<bbI" # save bit, FC state, time since launch NOTE: only for FC Rev2
 
     @staticmethod
     def _make_entries(entries: list[dict]):
@@ -218,6 +218,8 @@ class Parser:
         Args:
             bits (str): Binary string representing the data bitmask.
         """
+        self.sensor_struct_format = "<bbI"  # reset before rebuilding NOTE: Only for FC Rev2
+
         enabled_data = appa_data_bitmask_from_bits(bits)
 
         datas_idx = 0
@@ -498,6 +500,8 @@ class Parser:
         Raises:
             ValueError: If the preset data cannot be parsed.
         """
+        serial_connection.reset_input_buffer()
+
         # flash opcode
         serial_connection.send(b"\x22")
         # flash extract subcommand code
@@ -562,11 +566,11 @@ class Parser:
             # Parse save bit, flight computer state, and time (set parts of a sensor frame)
             save_bit = curr_frame_values[0]
             fc_state = curr_frame_values[1]
-            time = curr_frame_values[2] / 1_000
+            launch_time = curr_frame_values[2] / 1_000
 
             curr_frame_values = curr_frame_values[3:]
 
-            curr_sensor_frame = {"Save Bit": save_bit, "FC State": fc_state, "Time": time}
+            curr_sensor_frame = {"Save Bit": save_bit, "FC State": fc_state, "Time": launch_time}
             for name, value in zip(sensor_frame_names, curr_frame_values):
                 curr_sensor_frame[name] = value
             
@@ -578,6 +582,6 @@ class Parser:
 
         if data_path != "":
             flash_data = pd.DataFrame(sensor_frame_dicts)
-            flash_data.to_csv(data_path, index=False)
+            flash_data.to_csv(data_path, index=False, float_format="%.4f")
 
         return all_sensor_frames
