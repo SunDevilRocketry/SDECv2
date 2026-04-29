@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
-import builtins
+import serial
 import time
+
+from typing import Callable, Generator
 
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
 from SDECv2.BaseController import BaseSensor
 from SDECv2.SerialController import SerialObj
-from typing import Callable, Generator
+from SDECv2.Exceptions import SerialError
 
 class Sensor(BaseSensor):
     """

@@ -6,4 +6,4 @@ class SDECError(Exception):
         super().__init__(self.message)
     
     def __str__(self):
-        return f"SDECError: {self.message}"
+        return f"{self.__class__.__name__}: {self.message}"

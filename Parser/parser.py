@@ -5,7 +5,10 @@ import builtins
 import json
 import os
 import pandas as pd
+import serial
 import struct
+
+from typing import List
 
 from .bitmask import FeatureBitmask, DataBitmask
 from .create_configs import appa_feature_bitmask_from_bits, appa_data_bitmask_from_bits
@@ -16,11 +19,7 @@ from .preset_config import PresetConfig, ConfigEntry
 from .preset_data import PresetData, DataEntry
 from .toggle import Toggle
 from SDECv2.SerialController import SerialObj
-from typing import List
-from SDECv2.Exceptions import SDECError
-from SDECv2.Exceptions import InvalidDataError 
-from SDECv2.Exceptions import MissingDataError
-from SDECv2.Exceptions import ParserError
+from SDECv2.Exceptions import SDECError, ParserError, MissingDataError, InvalidDataError, SerialError
 
 FLASH_SIZE = 524288
 
@@ -50,24 +49,24 @@ class Parser:
 
         for entry in entries:
             name = str(entry.get("Name"))
-            if name == "": raise ValueError("Error: No Entry name")
+            if name == "": raise MissingDataError("No Entry name")
 
             size = entry.get("Size", 0)
-            if size == 0: raise ValueError("Error: No Entry size")
+            if size == 0: raise MissingDataError("No Entry size")
             size = int(size)
             
             data_type = entry.get("Data Type")
             match data_type:
                 case "int": data_type = int
                 case "float": data_type = float
-                case _: raise ValueError("Error: No or invalid Entry data type") 
+                case _: raise InvalidDataError("No or invalid Entry data type") 
             
             value = entry.get("Value", "")
-            if value == "": raise ValueError("Error: No Entry value")
+            if value == "": raise MissingDataError("No Entry value")
             match data_type:
                 case builtins.int: value = int(value)
                 case builtins.float: value = float(value)
-                case _: raise ValueError("Error: Invalid Entry data type")
+                case _: raise InvalidDataError("Invalid Entry data type")
             
             config_entries.append(
                 ConfigEntry(
@@ -109,25 +108,25 @@ class Parser:
             raise FileNotFoundError("Error: No JSON found")
 
         feature_bitmask_json: dict = json_input.get("Feature Bitmask", {})
-        if feature_bitmask_json == {}: raise MissingDataError("Error: No Feature Bitmask")
+        if feature_bitmask_json == {}: raise MissingDataError("No Feature Bitmask")
 
         data_bitmask_json: dict = json_input.get("Data Bitmask", {})
-        if data_bitmask_json == {}: raise MissingDataError("Error: No Data Bitmask")
+        if data_bitmask_json == {}: raise MissingDataError("No Data Bitmask")
 
         config_data_json: list[dict] = json_input.get("Config Data", [])
-        if config_data_json == []: raise MissingDataError("Error: No Config Data")
+        if config_data_json == []: raise MissingDataError("No Config Data")
 
         lora_data_json: list[dict] = json_input.get("LoRA Data", [])
-        if lora_data_json == []: raise ValueError("Error: No LoRA Data")
+        if lora_data_json == []: raise MissingDataError("No LoRA Data")
 
         imu_data_json: list[dict] = json_input.get("IMU Data", [])
-        if imu_data_json == []: raise MissingDataError("Error: No IMU Data")
+        if imu_data_json == []: raise MissingDataError("No IMU Data")
 
         baro_data_json: list[dict] = json_input.get("Baro Data", [])
-        if baro_data_json == []: raise MissingDataError("Error: No Baro Data")
+        if baro_data_json == []: raise MissingDataError("No Baro Data")
 
         servo_data_json: list[dict] = json_input.get("Servo Data", [])
-        if servo_data_json == []: raise MissingDataError("Error: No Servo Data") 
+        if servo_data_json == []: raise MissingDataError("No Servo Data") 
 
         def make_entries(entries: list[dict]):
             config_entries: list[ConfigEntry] = []
@@ -135,24 +134,24 @@ class Parser:
 
             for entry in entries:
                 name = str(entry.get("Name"))
-                if name == "": raise InvalidDataError("Error: No Entry name") 
+                if name == "": raise InvalidDataError("No Entry name") 
 
                 size = entry.get("Size", 0)
-                if size == 0: raise InvalidDataError("Error: No Entry size") 
+                if size == 0: raise InvalidDataError("No Entry size") 
                 size = int(size)
                 
                 data_type = entry.get("Data Type")
                 match data_type:
                     case "int": data_type = int
                     case "float": data_type = float
-                    case _: raise InvalidDataError("Error: No or invalid Entry data type")  
+                    case _: raise InvalidDataError("No or invalid Entry data type")  
                 
                 value = entry.get("Value", "")
-                if value == "": raise InvalidDataError("Error: No Entry value") 
+                if value == "": raise InvalidDataError("No Entry value") 
                 match data_type:
                     case builtins.int: value = int(value)
                     case builtins.float: value = float(value)
-                    case _: raise InvalidDataError("Error: Invalid Entry data type")
+                    case _: raise InvalidDataError("Invalid Entry data type")
                 
                 config_entries.append(
                     ConfigEntry(
@@ -273,50 +272,53 @@ class Parser:
         Raises:
             ValueError: If the preset data is invalid or incomplete.
         """
-        struct_format = self.preset_config.struct_format
-        if struct.calcsize(struct_format) != len(preset_bytes): print("Error: Preset Config size does not match preset bytes")
+        try: 
+            struct_format = self.preset_config.struct_format
+            if struct.calcsize(struct_format) != len(preset_bytes): print("Error: Preset Config size does not match preset bytes")
 
-        vals = struct.unpack(struct_format, preset_bytes)
+            vals = struct.unpack(struct_format, preset_bytes)
 
-        checksum = vals[0]
+            checksum = vals[0]
 
-        # Gets 8 least significant bits of 4 byte int as a string
-        feature_bitmask = appa_feature_bitmask_from_bits(format(vals[1] & 0xFF, "08b"))
-        data_bitmask = appa_data_bitmask_from_bits(format(vals[2] & 0xFF, "08b")) 
+            # Gets 8 least significant bits of 4 byte int as a string
+            feature_bitmask = appa_feature_bitmask_from_bits(format(vals[1] & 0xFF, "08b"))
+            data_bitmask = appa_data_bitmask_from_bits(format(vals[2] & 0xFF, "08b")) 
 
-        vals = vals[3:]  
+            vals = vals[3:]  
 
-        config_data = self._set_data_entries(vals, 0, self.preset_config.data_config)
-        vals_idx = len(config_data)
+            config_data = self._set_data_entries(vals, 0, self.preset_config.data_config)
+            vals_idx = len(config_data)
 
-        lora_data = self._set_data_entries(vals, vals_idx, self.preset_config.lora_config)
-        vals_idx += len(lora_data)
+            lora_data = self._set_data_entries(vals, vals_idx, self.preset_config.lora_config)
+            vals_idx += len(lora_data)
 
-        imu_data = self._set_data_entries(vals, vals_idx, self.preset_config.imu_config)
-        vals_idx += len(imu_data)
+            imu_data = self._set_data_entries(vals, vals_idx, self.preset_config.imu_config)
+            vals_idx += len(imu_data)
 
-        baro_data = self._set_data_entries(vals, vals_idx, self.preset_config.baro_config)
-        vals_idx += len(baro_data)
+            baro_data = self._set_data_entries(vals, vals_idx, self.preset_config.baro_config)
+            vals_idx += len(baro_data)
 
-        servo_data = self._set_data_entries(vals, vals_idx, self.preset_config.servo_config)
+            servo_data = self._set_data_entries(vals, vals_idx, self.preset_config.servo_config)
 
-        preset_data = PresetData(
-            feature_bitmask=feature_bitmask,
-            data_bitmask=data_bitmask,
-            config_data=config_data,
-            lora_data=lora_data,
-            imu_data=imu_data,
-            baro_data=baro_data,
-            servo_data=servo_data
-        )
+            preset_data = PresetData(
+                feature_bitmask=feature_bitmask,
+                data_bitmask=data_bitmask,
+                config_data=config_data,
+                lora_data=lora_data,
+                imu_data=imu_data,
+                baro_data=baro_data,
+                servo_data=servo_data
+            )
 
-        if checksum != preset_data.checksum:
-            checksum_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", checksum)) + '"'
-            calculated_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", preset_data.checksum)) + '"'
+            if checksum != preset_data.checksum:
+                checksum_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", checksum)) + '"'
+                calculated_print = 'b"' + ''.join(f'\\x{b:02X}' for b in struct.pack(b"<I", preset_data.checksum)) + '"'
 
-            print(f"Warning: Received checksum {checksum_print} does not match calculated checksum {calculated_print}")
+                print(f"Warning: Received checksum {checksum_print} does not match calculated checksum {calculated_print}")
 
-        return preset_data
+            return preset_data
+        except (struct.error, IndexError, ValueError) as e:
+            raise ParserError(e) 
     
     def download_preset(self, serial_connection: SerialObj, path="a_output/downloaded_preset.json") -> None:
         """
@@ -361,14 +363,17 @@ class Parser:
 
         lora_bytes = serial_connection.read(lora_len)
 
-        vals = struct.unpack(lora_struct_format, lora_bytes)
+        try: 
+            vals = struct.unpack(lora_struct_format, lora_bytes)
 
-        lora_data = self._set_data_entries(vals, 0, self.preset_config.lora_config)
+            lora_data = self._set_data_entries(vals, 0, self.preset_config.lora_config)
 
-        json_output = {"LoRA Data": [PresetData.format_entry(entry) for entry in lora_data]}
+            json_output = {"LoRA Data": [PresetData.format_entry(entry) for entry in lora_data]}
 
-        with open(path, "w") as f:
-            json.dump(json_output, f, indent=4)
+            with open(path, "w") as f:
+                json.dump(json_output, f, indent=4)
+        except (struct.error, IndexError) as e:
+            raise ParserError(e)
     
     def verify_preset(self, serial_connection: SerialObj) -> bool:
         """
@@ -422,26 +427,29 @@ class Parser:
         
         preset_data = parser.preset_data
        
-        # Convert checksum, feature bitmask, data bitmask, and config data to bytes
-        data = bytearray()
-        data.extend(struct.pack("<I", preset_data.checksum))
-        data.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
-        data.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
-        data.extend(preset_data.entries_to_bytes(preset_data.config_data))
+        try:
+            # Convert checksum, feature bitmask, data bitmask, and config data to bytes
+            data = bytearray()
+            data.extend(struct.pack("<I", preset_data.checksum))
+            data.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
+            data.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
+            data.extend(preset_data.entries_to_bytes(preset_data.config_data))
 
-        # preset opcode
-        serial_connection.send(b"\x24")
-        # upload subcommand code
-        serial_connection.send(b"\x01")
+            # preset opcode
+            serial_connection.send(b"\x24")
+            # upload subcommand code
+            serial_connection.send(b"\x01")
 
-        config_bytes = preset_data.entries_to_bytes(preset_data.config_data)
+            config_bytes = preset_data.entries_to_bytes(preset_data.config_data)
 
-        wire = bytearray()
-        wire.extend(struct.pack("<I", preset_data.checksum))
-        wire.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
-        wire.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
-        wire.extend(config_bytes)
- 
+            wire = bytearray()
+            wire.extend(struct.pack("<I", preset_data.checksum))
+            wire.extend(struct.pack("<I", preset_data.feature_bitmask.to_int()))
+            wire.extend(struct.pack("<I", preset_data.data_bitmask.to_int()))
+            wire.extend(config_bytes)
+        except struct.error as e:
+            raise ParserError(e)
+
         serial_connection.send(data)
 
         return parser
@@ -467,14 +475,14 @@ class Parser:
             json_input = json.load(f)
 
         if json_input is None:
-            raise ValueError("Error: No JSON found")
+            raise ParserError("Error: No JSON found")
 
         lora_data_json: list[dict] = json_input.get("LoRA Data", [])
-        if lora_data_json == []: raise ValueError("Error: No LoRA Data")
+        if lora_data_json == []: raise ParserError("Error: No LoRA Data")
 
         lora_config, lora_data = cls._make_entries(lora_data_json)
        
-        # Convert LoRA data to bytes
+        # Convert LoRa data to bytes
         data = bytearray()
         data.extend(PresetData.entries_to_bytes(lora_data))
 
@@ -537,48 +545,51 @@ class Parser:
 
         if preset_path != "": flash_extract_preset.save_preset(path=preset_path)
             
-        self._compute_frames(str(flash_extract_preset.data_bitmask))
+        try: 
+            self._compute_frames(str(flash_extract_preset.data_bitmask))
 
-        sensor_frame_names = []
-        enabled_data = appa_data_bitmask_from_bits(str(flash_extract_preset.data_bitmask))
-        
-        data_idx = 0
-        for bit in str(enabled_data):
-            if bit == "0": continue
-            data = enabled_data.datas[data_idx]
-            for sensor in data.sensors: sensor_frame_names.append(sensor.name)
-            data_idx += 1
-        
-        sensor_frame_size = struct.calcsize(self.sensor_struct_format)
-
-        # Calculate the start index based on how many sensor frames are needed for the preset 
-        start_idx = sensor_frame_size
-        while start_idx < preset_size: start_idx += sensor_frame_size
-        stop_idx = start_idx + sensor_frame_size
-        
-        all_sensor_frames: List[FlashSensorFrame] = []
-        sensor_frame_dicts = []
-        while stop_idx < FLASH_SIZE:
-            curr_frame_bytes = flash_bytes[start_idx:stop_idx]
-
-            curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
-
-            # Parse save bit, flight computer state, and time (set parts of a sensor frame)
-            save_bit = curr_frame_values[0]
-            fc_state = curr_frame_values[1]
-            launch_time = curr_frame_values[2] / 1_000
-
-            curr_frame_values = curr_frame_values[3:]
-
-            curr_sensor_frame = {"Save Bit": save_bit, "FC State": fc_state, "Time": launch_time}
-            for name, value in zip(sensor_frame_names, curr_frame_values):
-                curr_sensor_frame[name] = value
+            sensor_frame_names = []
+            enabled_data = appa_data_bitmask_from_bits(str(flash_extract_preset.data_bitmask))
             
-            start_idx += sensor_frame_size
-            stop_idx += sensor_frame_size
+            data_idx = 0
+            for bit in str(enabled_data):
+                if bit == "0": continue
+                data = enabled_data.datas[data_idx]
+                for sensor in data.sensors: sensor_frame_names.append(sensor.name)
+                data_idx += 1
+            
+            sensor_frame_size = struct.calcsize(self.sensor_struct_format)
 
-            all_sensor_frames.append(FlashSensorFrame(curr_sensor_frame))
-            sensor_frame_dicts.append(curr_sensor_frame)
+            # Calculate the start index based on how many sensor frames are needed for the preset 
+            start_idx = sensor_frame_size
+            while start_idx < preset_size: start_idx += sensor_frame_size
+            stop_idx = start_idx + sensor_frame_size
+            
+            all_sensor_frames: List[FlashSensorFrame] = []
+            sensor_frame_dicts = []
+            while stop_idx < FLASH_SIZE:
+                curr_frame_bytes = flash_bytes[start_idx:stop_idx]
+
+                curr_frame_values = struct.unpack(self.sensor_struct_format, curr_frame_bytes)
+
+                # Parse save bit, flight computer state, and time (set parts of a sensor frame)
+                save_bit = curr_frame_values[0]
+                fc_state = curr_frame_values[1]
+                launch_time = curr_frame_values[2] / 1_000
+
+                curr_frame_values = curr_frame_values[3:]
+
+                curr_sensor_frame = {"Save Bit": save_bit, "FC State": fc_state, "Time": launch_time}
+                for name, value in zip(sensor_frame_names, curr_frame_values):
+                    curr_sensor_frame[name] = value
+                
+                start_idx += sensor_frame_size
+                stop_idx += sensor_frame_size
+
+                all_sensor_frames.append(FlashSensorFrame(curr_sensor_frame))
+                sensor_frame_dicts.append(curr_sensor_frame)
+        except (struct.error, ValueError, IndexError) as e:
+            raise ParserError(e)
 
         if data_path != "":
             flash_data = pd.DataFrame(sensor_frame_dicts)

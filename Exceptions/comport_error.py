@@ -1,8 +1,7 @@
 from .sdec_error import SDECError
 
-
-class InvalidDataError(SDECError):
-    """Exception raised when required data is invalid."""
+class ComportError(SDECError):
+    """Exception raised when using a Comport incorrectly."""
     
     def __init__(self, message):
         self.message = message

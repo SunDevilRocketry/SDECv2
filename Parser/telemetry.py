@@ -16,6 +16,7 @@ from dataclasses import dataclass, asdict
 from typing import ClassVar
 from SDECv2.SerialController import SerialObj
 from SDECv2.BaseController import create_controllers, create_firmwares
+from SDECv2.Exceptions import ParserError
 from threading import Lock
 from typing import Any
 
@@ -55,7 +56,7 @@ class LoRaInternalHeaderType:
     @classmethod
     def parse(cls, data: bytes) -> LoRaInternalHeaderType:
         if len(data) < LORA_INTERNAL_HEADER_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"LoRaInternalHeaderType.parse expects {LORA_INTERNAL_HEADER_SIZE} bytes, "
                 f"got {len(data)}"
             )
@@ -91,7 +92,7 @@ class DashboardDumpType:
     @classmethod
     def parse(cls, data: bytes) -> DashboardDumpType:
         if len(data) < DASHBOARD_DUMP_TYPE_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"DashboardDumpType.parse expects {DASHBOARD_DUMP_TYPE_SIZE} bytes, got {len(data)}"
             )
         unpacked = struct.unpack(cls.STRUCT, data[:DASHBOARD_DUMP_TYPE_SIZE])
@@ -123,7 +124,7 @@ class LoRaMsgVehicleIdType:
     @classmethod
     def parse(cls, data: bytes) -> LoRaMsgVehicleIdType:
         if len(data) < LORA_PAYLOAD_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"LoRaMsgVehicleIdType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
         hw, fw, ver, fid = struct.unpack(cls.STRUCT, data[: 6 + FLIGHT_ID_SIZE])
@@ -141,7 +142,7 @@ class LoRaMsgDashboardDumpType:
     @classmethod
     def parse(cls, data: bytes) -> LoRaMsgDashboardDumpType:
         if len(data) < LORA_PAYLOAD_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"LoRaMsgDashboardDumpType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
         fsm_state = data[0]
@@ -158,7 +159,7 @@ class LoRaMsgTextMessageType:
     @classmethod
     def parse(cls, data: bytes) -> LoRaMsgTextMessageType:
         if len(data) < LORA_PAYLOAD_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"LoRaMsgTextMessageType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
         raw = data[:LORA_PAYLOAD_SIZE]
@@ -179,7 +180,7 @@ class LoRaMessage:
     @classmethod
     def parse(cls, data: bytes) -> LoRaMessage:
         if len(data) < LORA_MESSAGE_SIZE:
-            raise ValueError(
+            raise ParserError(
                 f"LoRaMessage.parse expects at least {LORA_MESSAGE_SIZE} bytes, got {len(data)}"
             )
         chunk = data[:LORA_MESSAGE_SIZE]
@@ -283,7 +284,7 @@ class Telemetry:
                             "sig_strength": 0,
                             "status": "OK"
                         }
-                    except (ValueError, TypeError, AttributeError) as e:
+                    except (ValueError, ParserError, TypeError, AttributeError) as e:
                         print("Malformed vehicle ID message received. Discarding.")
                         print(f"HW: {hw}; FW: {fw};")
 
