@@ -87,62 +87,59 @@ class SensorSentry:
             print("Sentry has no sensors")
             return None
         
-        try:
-            # Sensor opcode
-            serial_connection.send(b"\x03")
+        # Sensor opcode
+        serial_connection.send(b"\x03")
 
-            # Poll subcommand code 
-            serial_connection.send(b"\x02")
+        # Poll subcommand code 
+        serial_connection.send(b"\x02")
 
-            # Tell the controller how many sensors to use 
-            num_sensors = len(self.sensors)
-            serial_connection.send(num_sensors.to_bytes(1, "big"))
+        # Tell the controller how many sensors to use 
+        num_sensors = len(self.sensors)
+        serial_connection.send(num_sensors.to_bytes(1, "big"))
 
-            # Send all the sensor poll codes
+        # Send all the sensor poll codes
+        for sensor in self.sensors:
+            serial_connection.send(sensor.poll_code)
+
+        # Start poll code 
+        serial_connection.send(b"\xF3")
+
+        # Polling loop
+        start = time.time()
+        poll_count = 0
+        while timeout or count:
+            # Request poll code
+            serial_connection.send(b"\x51")
+
+            # Read and convert the sensor bytes
+            data_bytes = serial_connection.read(self.size)
+            sensor_poll = {}
+            offset = 0
             for sensor in self.sensors:
-                serial_connection.send(sensor.poll_code)
+                sensor_data_bytes = data_bytes[offset:offset + sensor.size]
+                converted_number = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
+                sensor_poll[sensor] = converted_number
+                offset += sensor.size
+            
+            yield sensor_poll
 
-            # Start poll code 
-            serial_connection.send(b"\xF3")
+            poll_count += 1
 
-            # Polling loop
-            start = time.time()
-            poll_count = 0
-            while timeout or count:
-                # Request poll code
-                serial_connection.send(b"\x51")
+            if timeout and time.time() - start >= timeout:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
 
-                # Read and convert the sensor bytes
-                data_bytes = serial_connection.read(self.size)
-                sensor_poll = {}
-                offset = 0
-                for sensor in self.sensors:
-                    sensor_data_bytes = data_bytes[offset:offset + sensor.size]
-                    converted_number = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
-                    sensor_poll[sensor] = converted_number
-                    offset += sensor.size
-                
-                yield sensor_poll
+            if count and poll_count >= count:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
 
-                poll_count += 1
-
-                if timeout and time.time() - start >= timeout:
-                    # Stop poll code
-                    serial_connection.send(b"\x74")
-                    return
-
-                if count and poll_count >= count:
-                    # Stop poll code
-                    serial_connection.send(b"\x74")
-                    return
-
-                # Wait poll code
-                serial_connection.send(b"\x44") 
-                time.sleep(0.2)
-                # Resume poll code
-                serial_connection.send(b"\xEF")
-        except serial.SerialException as e:
-            raise SerialError(e)
+            # Wait poll code
+            serial_connection.send(b"\x44") 
+            time.sleep(0.2)
+            # Resume poll code
+            serial_connection.send(b"\xEF")
 
     def dump(self, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
         """
@@ -159,22 +156,19 @@ class SensorSentry:
             print("Sentry has no sensors")
             return {}
         
-        try:
-            # Sensor opcode 
-            serial_connection.send(b"\x03")
+        # Sensor opcode 
+        serial_connection.send(b"\x03")
 
-            # Dump subcommand code
-            serial_connection.send(b"\x01")
+        # Dump subcommand code
+        serial_connection.send(b"\x01")
 
-            # Get size of sensor dump from Flight Computer
-            sensor_dump_size = serial_connection.read()
-            sensor_dump_size = int.from_bytes(sensor_dump_size, "big")
+        # Get size of sensor dump from Flight Computer
+        sensor_dump_size = serial_connection.read()
+        sensor_dump_size = int.from_bytes(sensor_dump_size, "big")
 
-            # Get sensor dump but only the minimum required amount for the sensors in the sentry
-            last_sensor = self.sensors[-1]
-            data_bytes = serial_connection.read(last_sensor.offset + last_sensor.size)
-        except serial.SerialException as e:
-            raise SerialError(e)
+        # Get sensor dump but only the minimum required amount for the sensors in the sentry
+        last_sensor = self.sensors[-1]
+        data_bytes = serial_connection.read(last_sensor.offset + last_sensor.size)
 
         # Extract each sensor's data from the sensor dump
         sensor_dump = {}
@@ -197,17 +191,14 @@ class SensorSentry:
         Returns:
             Dict[Sensor, float | int | None]: Sensor data.
         """
-        try:
-            # Dashboard dump opcode
-            serial_connection.send(b"\x30")
+        # Dashboard dump opcode
+        serial_connection.send(b"\x30")
 
-            # Avoid creating a serial_sentry to reduce overhead
-            sensors = rev2_dashboard_dump_sensors()
-            sensors_size = sum(sensor.size for sensor in sensors)
+        # Avoid creating a serial_sentry to reduce overhead
+        sensors = rev2_dashboard_dump_sensors()
+        sensors_size = sum(sensor.size for sensor in sensors)
 
-            data_bytes = serial_connection.read(sensors_size)
-        except serial.SerialException as e:
-            raise SerialError(e)
+        data_bytes = serial_connection.read(sensors_size)
 
         sensor_dump = {}
         for sensor in sensors:

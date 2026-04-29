@@ -50,54 +50,51 @@ class Sensor(BaseSensor):
         Yields:
             float | int: The converted sensor data.
         """
-        try:
-            # Sensor opcode
-            serial_connection.send(b"\x03") 
+        # Sensor opcode
+        serial_connection.send(b"\x03") 
 
-            # Poll subcommand code
-            serial_connection.send(b"\x02")
+        # Poll subcommand code
+        serial_connection.send(b"\x02")
 
-            # Tell the controller how many sensors to use
-            num_sensors = 1
-            serial_connection.send(num_sensors.to_bytes(1, "big"))
+        # Tell the controller how many sensors to use
+        num_sensors = 1
+        serial_connection.send(num_sensors.to_bytes(1, "big"))
 
-            # Send the current sensor poll code
-            serial_connection.send(self.poll_code)
+        # Send the current sensor poll code
+        serial_connection.send(self.poll_code)
 
-            # Start poll code
-            serial_connection.send(b"\xF3")
+        # Start poll code
+        serial_connection.send(b"\xF3")
 
-            # Polling loop
-            start = time.time()
-            poll_count = 0
-            while timeout or count:
-                # Request poll code
-                serial_connection.send(b"\x51")
+        # Polling loop
+        start = time.time()
+        poll_count = 0
+        while timeout or count:
+            # Request poll code
+            serial_connection.send(b"\x51")
 
-                # Read and convert the sensor bytes
-                data_bytes = serial_connection.read(self.size)
-                converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
-                if converted_number is not None: yield converted_number
+            # Read and convert the sensor bytes
+            data_bytes = serial_connection.read(self.size)
+            converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
+            if converted_number is not None: yield converted_number
 
-                poll_count += 1
+            poll_count += 1
 
-                if timeout and time.time() - start >= timeout:
-                    # Stop poll code
-                    serial_connection.send(b"\x74")
-                    return
+            if timeout and time.time() - start >= timeout:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
 
-                if count and poll_count >= count:
-                    # Stop poll code
-                    serial_connection.send(b"\x74")
-                    return
+            if count and poll_count >= count:
+                # Stop poll code
+                serial_connection.send(b"\x74")
+                return
 
-                # Wait poll code
-                serial_connection.send(b"\x44") 
-                time.sleep(0.1)
-                # Resume poll code
-                serial_connection.send(b"\xEF")
-        except serial.SerialException as e:
-            raise SerialError(e)
+            # Wait poll code
+            serial_connection.send(b"\x44") 
+            time.sleep(0.1)
+            # Resume poll code
+            serial_connection.send(b"\xEF")
 
     # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def dump(self, serial_connection: SerialObj) -> float | int:
@@ -110,34 +107,31 @@ class Sensor(BaseSensor):
         Returns:
             float | int: The converted sensor data.
         """
-        try:
-            # Sensor opcode
-            serial_connection.send(b"\x03") 
+        # Sensor opcode
+        serial_connection.send(b"\x03") 
 
-            # Poll subcommand code
-            serial_connection.send(b"\x02")
+        # Poll subcommand code
+        serial_connection.send(b"\x02")
 
-            # Tell the controller how many sensors to use
-            num_sensors = 1
-            serial_connection.send(num_sensors.to_bytes(1, "big"))
+        # Tell the controller how many sensors to use
+        num_sensors = 1
+        serial_connection.send(num_sensors.to_bytes(1, "big"))
 
-            # Send the current sensor poll code
-            serial_connection.send(self.poll_code)
+        # Send the current sensor poll code
+        serial_connection.send(self.poll_code)
 
-            # Start poll code
-            serial_connection.send(b"\xF3")
+        # Start poll code
+        serial_connection.send(b"\xF3")
 
-            # Request poll code
-            serial_connection.send(b"\x51")
+        # Request poll code
+        serial_connection.send(b"\x51")
 
-            # Read and convert the sensor bytes
-            data_bytes = serial_connection.read(num_bytes=self.size)
-            converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
-            
-            # Stop poll code
-            serial_connection.send(b"\x74")
-        except serial.SerialException as e:
-            raise SerialError(e)
+        # Read and convert the sensor bytes
+        data_bytes = serial_connection.read(num_bytes=self.size)
+        converted_number = process_data_bytes(data_bytes, self.data_type, self.convert_data)
+        
+        # Stop poll code
+        serial_connection.send(b"\x74")
 
         if converted_number is not None: return converted_number
 
