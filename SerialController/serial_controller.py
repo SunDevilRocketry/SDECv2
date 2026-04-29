@@ -7,6 +7,7 @@ import serial.tools.list_ports
 from .comport import Comport, Status
 from typing import List
 from SDECv2.BaseController import BaseController, create_controllers, create_firmwares
+from SDECv2.Exceptions import ComportError
 
 class SerialObj:
     """
@@ -54,9 +55,11 @@ class SerialObj:
         Returns:
             bool: True if the port was successfully opened, False otherwise.
         """
-        if self.comport.status is Status.OPEN: return False 
-        if self.serialObj.is_open: return False
-        if not self.comport: return False
+        if (self.comport.status is Status.OPEN or
+            self.serialObj.is_open or
+            not self.comport
+        ):
+            raise ComportError("Comport already open or does not exist")
 
         self.serialObj.open()
         self.comport.status = Status.OPEN
@@ -70,9 +73,11 @@ class SerialObj:
         Returns:
             bool: True if the port was successfully closed, False otherwise.
         """
-        if self.comport.status is Status.CLOSED: return False
-        if not self.serialObj.is_open: return False
-        if not self.comport: return False
+        if (self.comport.status is Status.CLOSED or
+            not self.serialObj.is_open or
+            not self.comport
+        ):
+            raise ComportError("Comport already closed or does not exist")
 
         self.serialObj.close()
         self.comport.status = Status.CLOSED
