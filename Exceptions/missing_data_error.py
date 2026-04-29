@@ -9,4 +9,4 @@ class MissingDataError(SDECError):
         super().__init__(self.message)
     
     def __str__(self):
-       return super().__str__()
+       return f"{self.__class__.__name__}: {self.message}"

@@ -7,7 +7,7 @@ import serial.tools.list_ports
 from .comport import Comport, Status
 from typing import List
 from SDECv2.BaseController import BaseController, create_controllers, create_firmwares
-from SDECv2.Exceptions import ComportError
+from SDECv2.Exceptions import ComportError, SerialError
 
 class SerialObj:
     """
@@ -94,7 +94,7 @@ class SerialObj:
         try:
             self.serialObj.write(bytes)
         except serial.SerialException as e:
-            print(f"Error: {e}")
+            raise SerialError(e)
 
     def read(self, num_bytes: int = 1) -> bytes:
         """
@@ -110,8 +110,7 @@ class SerialObj:
             data = self.serialObj.read(size=num_bytes)
             return data
         except serial.SerialException as e:
-            print(f"Error: {e}")
-            return b""
+            raise SerialError(e)
         
     def connect(self) -> None:
         """
@@ -120,12 +119,16 @@ class SerialObj:
         Returns:
             None
         """
-        # send connect opcode
-        self.send(b'\x02')
+        try:
+            # send connect opcode
+            self.send(b'\x02')
 
-        # retrieve opcodes
-        hw = self.read(1)
-        fw = self.read(1)
+            # retrieve opcodes
+            hw = self.read(1)
+            fw = self.read(1)
+        
+        except serial.SerialException as e:
+            raise SerialError(e) 
         
         target = BaseController(create_controllers.create_controller(hw), create_firmwares.create_firmware(fw))
 
@@ -141,7 +144,7 @@ class SerialObj:
         try:
             self.serialObj.reset_input_buffer()
         except serial.SerialException as e:
-            print(f"Error: {e}")
+            raise SerialError(e)
 
     def pretty_print(self, indent=0):
         """
