@@ -61,7 +61,11 @@ class SerialObj:
         ):
             raise ComportError("Comport already open or does not exist")
 
-        self.serialObj.open()
+        try:
+            self.serialObj.open()
+        except serial.SerialException as e:
+            raise SerialError(e)
+            
         self.comport.status = Status.OPEN
         
         return True
@@ -79,7 +83,11 @@ class SerialObj:
         ):
             raise ComportError("Comport already closed or does not exist")
 
-        self.serialObj.close()
+        try:
+            self.serialObj.close()
+        except serial.SerialException as e:
+            raise SerialError(e)
+        
         self.comport.status = Status.CLOSED
 
         return True
