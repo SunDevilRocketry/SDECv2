@@ -375,7 +375,8 @@ class Parser:
         except (struct.error, IndexError) as e:
             raise ParserError(e)
     
-    def verify_preset(self, serial_connection: SerialObj) -> bool:
+    @classmethod
+    def verify_preset(cls, serial_connection: SerialObj) -> bool:
         """
         Verify the checksum of the preset on the Flight Computer.
 
