@@ -6,6 +6,12 @@ from .sensor import Sensor
 from typing import List
 
 def flight_computer_rev2_sensors() -> List[Sensor]:
+    """
+    Create and return a list of sensors for the Flight Computer Rev 2.0.
+
+    Returns:
+        List[Sensor]: List of configured sensors for the Flight Computer Rev 2.0.
+    """
     sensor_tuples = [
         (b"\x00", "accXconv", "Pre-converted Accel X", 4, float, "m/s/s", None),
         (b"\x01", "accYconv", "Pre-converted Accel Y", 4, float, "m/s/s", None),
@@ -57,6 +63,12 @@ def flight_computer_rev2_sensors() -> List[Sensor]:
     return sensors
 
 def rev2_dashboard_dump_sensors() -> List[Sensor]:
+    """
+    Create and return a list of dashbaord specific sensors for the Flight Computer Rev 2.0.
+
+    Returns:
+        List[Sensor]: List of configured dashboard specific sensors for the Flight Computer Rev 2.0.
+    """
     sensor_tuples = [
         (b"\x00", "accXconv", "Pre-converted Accel X", 4, float, "m/s/s", None),
         (b"\x01", "accYconv", "Pre-converted Accel Y", 4, float, "m/s/s", None),

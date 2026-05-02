@@ -1,15 +1,22 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
-import builtins
+import serial
 import time
+
+from typing import Callable, Generator
 
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
 from SDECv2.BaseController import BaseSensor
 from SDECv2.SerialController import SerialObj
-from typing import Callable, Generator
+from SDECv2.Exceptions import SerialError
 
 class Sensor(BaseSensor):
+    """
+    Represents a sensor with metadata and conversion functions.
+    Provides methods for equality checks and string representation.
+    """
+
     def __init__(
             self, 
             short_name: str, 
@@ -26,34 +33,23 @@ class Sensor(BaseSensor):
         self.poll_code = poll_code
         self.offset = offset
 
-    def __eq__(self, other):
-        if not isinstance(other, Sensor):
-            return False
-        
-        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
-    
-    def __hash__(self):
-        return hash((self.short_name, self.poll_code, self.offset))
-    
-    def __str__(self):
-        return (
-            "Sensor:{" +
-            "\n Short Name: {}".format(self.short_name) +
-            "\n Name: {}".format(self.name) + 
-            "\n Size: {}".format(self.size) + 
-            "\n Data Type: {}".format(self.data_type) +
-            "\n Unit: {}".format(self.unit) +
-            "\n Poll Code: {}".format(self.poll_code) +
-            "\n Offset: {}".format(self.offset) +
-            "\n}"
-        )
-
     # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def poll(self, 
                   serial_connection: SerialObj, 
                   timeout: int | None=None, 
                   count: int | None=None
                   ) -> Generator[float | int, None, None]:
+        """
+        Poll the sensor and yield the converted data.
+
+        Args:
+            serial_connection (SerialObj): The serial connection object.
+            timeout (int | None): The maximum time to wait for a response.
+            count (int | None): The number of times to poll.
+
+        Yields:
+            float | int: The converted sensor data.
+        """
         # Sensor opcode
         serial_connection.send(b"\x03") 
 
@@ -102,6 +98,15 @@ class Sensor(BaseSensor):
 
     # NOTE: Currently unsupported by v2.6.0 of Flight Computer Firmware
     def dump(self, serial_connection: SerialObj) -> float | int:
+        """
+        Dump the sensor data.
+
+        Args:
+            serial_connection (SerialObj): The serial connection object.
+
+        Returns:
+            float | int: The converted sensor data.
+        """
         # Sensor opcode
         serial_connection.send(b"\x03") 
 
@@ -131,3 +136,61 @@ class Sensor(BaseSensor):
         if converted_number is not None: return converted_number
 
         return 0
+    
+    def __eq__(self, other):
+        """
+        Check if two sensors are equal based on their attributes.
+
+        Args:
+            other (Sensor): The sensor to compare with.
+
+        Returns:
+            bool: True if sensors are equal, False otherwise.
+        """
+        if not isinstance(other, Sensor):
+            return False
+        
+        return (self.short_name, self.poll_code, self.offset) == (other.short_name, other.poll_code, other.offset)
+    
+    def __hash__(self):
+        """
+        Compute a hash value for the sensor based on its attributes.
+        Only hashes the unchanging attributes of the sensor. 
+
+        Returns:
+            int: Hash value of the sensor.
+        """
+        return hash((self.short_name, self.poll_code, self.offset))
+    
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
+        spaces = "  " * (1 + indent)
+        return (
+            f"{"  " * indent}Sensor {{\n" +
+            f"{spaces} Short Name: {self.short_name}\n" +
+            f"{spaces} Name: {self.name}\n" + 
+            f"{spaces} Size: {self.size}\n" + 
+            f"{spaces} Data Type: {self.data_type}\n" +
+            f"{spaces} Unit: {self.unit}\n" +
+            f"{spaces} Poll Code: {self.poll_code}\n" +
+            f"{spaces} Offset: {self.offset}\n" +
+            f"{"  " * indent}}}"
+        )
+
+    
+    def __str__(self):
+        """
+        Return a string representation of the sensor.
+
+        Returns:
+            str: String representation of the sensor's attributes.
+        """
+        return self.pretty_print()

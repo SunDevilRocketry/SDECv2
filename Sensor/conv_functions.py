@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
+"""
+This module contains the conversion functions for sensors to use.
+Conversion functions are created here then referenced when creating a sensor object.
+"""
+
 def imu_accel(readout):
 	# Convert from 16 bit unsigned to 16 bit signed
 	if readout < 0x8000: 

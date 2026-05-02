@@ -6,17 +6,42 @@ import serial.tools.list_ports
 
 from .comport import Comport, Status
 from typing import List
+from SDECv2.BaseController import BaseController, create_controllers, create_firmwares
+from SDECv2.Exceptions import ComportError, SerialError
 
 class SerialObj:
+    """
+    Represents a serial connection object for communication with the Flight Computer.
+    Provides methods to manage and interact with the serial port.
+    """
+
     def __init__(self):
         self.comport: Comport
         self.serialObj: serial.Serial = serial.Serial()
+        self.target: BaseController | None = None
 
     def available_comports(self) -> List[str]:
+        """
+        Get a list of available COM ports.
+
+        Returns:
+            List[str]: List of available COM port names.
+        """
         ports = serial.tools.list_ports.comports()
         return [port.device for port in ports]
     
     def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
+        """
+        Initialize the COM port with the specified parameters.
+
+        Args:
+            name (str): Name of the COM port.
+            baudrate (int): Baud rate for the connection.
+            timeout (int): Timeout for the connection.
+
+        Returns:
+            Comport: Configured COM port instance.
+        """
         self.comport = Comport(name, baudrate, timeout)
         self.serialObj.port = name
         self.serialObj.baudrate = baudrate
@@ -24,51 +49,136 @@ class SerialObj:
         return self.comport
 
     def open_comport(self) -> bool:
-        if self.comport.status is Status.OPEN: return False 
-        if self.serialObj.is_open: return False
-        if not self.comport: return False
+        """
+        Open the initialized COM port.
 
-        self.serialObj.open()
+        Returns:
+            bool: True if the port was successfully opened, False otherwise.
+        """
+        if (self.comport.status is Status.OPEN or
+            self.serialObj.is_open or
+            not self.comport
+        ):
+            raise ComportError("Comport already open or does not exist")
+
+        try:
+            self.serialObj.open()
+        except serial.SerialException as e:
+            raise SerialError(e)
+            
         self.comport.status = Status.OPEN
         
         return True
 
     def close_comport(self) -> bool:
-        if self.comport.status is Status.CLOSED: return False
-        if not self.serialObj.is_open: return False
-        if not self.comport: return False
+        """
+        Close the currently open COM port.
 
-        self.serialObj.close()
+        Returns:
+            bool: True if the port was successfully closed, False otherwise.
+        """
+        if (self.comport.status is Status.CLOSED or
+            not self.serialObj.is_open or
+            not self.comport
+        ):
+            raise ComportError("Comport already closed or does not exist")
+
+        try:
+            self.serialObj.close()
+        except serial.SerialException as e:
+            raise SerialError(e)
+        
         self.comport.status = Status.CLOSED
 
         return True
 
     def send(self, bytes: bytes) -> None:
+        """
+        Send data over the serial connection.
+
+        Args:
+            bytes (bytes): Data to send.
+        """
         try:
             self.serialObj.write(bytes)
         except serial.SerialException as e:
-            print(f"Error: {e}")
+            raise SerialError(e)
 
     def read(self, num_bytes: int = 1) -> bytes:
+        """
+        Read data from the serial connection.
+
+        Args:
+            num_bytes (int): Number of bytes to read.
+
+        Returns:
+            bytes: Read data.
+        """
         try:
             data = self.serialObj.read(size=num_bytes)
             return data
         except serial.SerialException as e:
-            print(f"Error: {e}")
-            return b""
+            raise SerialError(e)
+        
+    def connect(self) -> None:
+        """
+        Sends the connect command and sets this SerialObj's target field based on the response.
+        
+        Returns:
+            None
+        """
+        try:
+            # send connect opcode
+            self.send(b'\x02')
+
+            # retrieve opcodes
+            hw = self.read(1)
+            fw = self.read(1)
+        
+        except serial.SerialException as e:
+            raise SerialError(e) 
+        
+        target = BaseController(create_controllers.create_controller(hw), create_firmwares.create_firmware(fw))
+
+        self.target = target
         
     def reset_input_buffer(self) -> None:
+        """
+        Reset the input buffer of the serial port.
+
+        Returns:
+            None
+        """
         try:
             self.serialObj.reset_input_buffer()
         except serial.SerialException as e:
-            print(f"Error: {e}")
+            raise SerialError(e)
+
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset configuration.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset configuration.
+        """
+        spaces = "  " * (1 + indent)
+
+        return (
+            f"{"  " * indent}Serial Obj {{\n" +
+            f"{spaces}Port: {self.serialObj.port}\n" + 
+            f"{spaces}Baud: {self.serialObj.baudrate}\n" +
+            f"{spaces}Timeout: {self.serialObj.timeout}\n" +
+            f"{"  " * indent}}}"
+        )
     
     def __str__(self):
-        return (
-                "SerialController:{" +
-                "\n{}".format(self.comport) +
-                "\n}"
-            )
+        """
+        Return a string representation of the preset configuration.
+        """
+        return self.pretty_print()
     
     def __repr__(self):
         return self.__str__()

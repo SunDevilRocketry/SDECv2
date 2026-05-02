@@ -8,5 +8,6 @@ from .feature import Feature
 from .preset_config import PresetConfig
 from .preset_data import PresetData
 from .parser import Parser
+from .telemetry import Telemetry
 
-__all__ = ["Data", "DataBitmask", "Feature", "FeatureBitmask", "FlashSensorFrame", "PresetConfig", "PresetData", "Parser"]
+__all__ = ["Data", "DataBitmask", "Feature", "FeatureBitmask", "FlashSensorFrame", "PresetConfig", "PresetData", "Parser", "Telemetry"]

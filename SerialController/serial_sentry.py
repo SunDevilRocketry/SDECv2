@@ -21,12 +21,31 @@ class ChangedSerialObj:
     new_snapshot: SnapshotSerialObj
 
 class SerialSentry:
+    """
+    Monitors and manages multiple serial connections.
+    Provides methods to open, close, and snapshot serial connections.
+    """
+
     def __init__(self):
+        """
+        Initialize the SerialSentry with empty serial connections.
+        """
         self.serial_objs: Dict[str, SerialObj] = {}
 
         self.changed_serial_objs: List[ChangedSerialObj] = []
 
     def open_serial(self, name: str, baudrate: int, timeout: int) -> SerialObj:
+        """
+        Open a new serial connection and add it to the sentry.
+
+        Args:
+            name (str): Name of the COM port.
+            baudrate (int): Baud rate for the connection.
+            timeout (int): Timeout for the connection.
+
+        Returns:
+            SerialObj: The opened serial connection object.
+        """
         new_serial_connection = SerialObj()
 
         new_serial_connection.init_comport(name, baudrate, timeout)
@@ -38,6 +57,15 @@ class SerialSentry:
         return new_serial_connection
     
     def close_serial(self, serial_controller: SerialObj) -> bool:
+        """
+        Close an existing serial connection and remove it from the sentry.
+
+        Args:
+            serial_controller (SerialObj): The serial connection to close.
+
+        Returns:
+            bool: True if the connection was successfully closed, False otherwise.
+        """
         if serial_controller.close_comport():
             del self.serial_objs[serial_controller.comport.name]
             
@@ -46,6 +74,12 @@ class SerialSentry:
             return False
         
     def snapshot_serial_objs(self) -> Dict[str, SnapshotSerialObj]:
+        """
+        Take a snapshot of the current state of all serial connections.
+
+        Returns:
+            Dict[str, SnapshotSerialObj]: Snapshot of serial connections.
+        """
         snapshots = {}
         for serial_obj in self.serial_objs.values():
             snapshots[serial_obj.comport.name] = SnapshotSerialObj(
@@ -54,6 +88,12 @@ class SerialSentry:
         return snapshots
         
     def monitor_serial_objs_thread(self, time: int) -> None:
+        """
+        Monitor serial connections for changes over a given time period.
+
+        Args:
+            time (int): Time period to monitor in seconds.
+        """
         curr_time = 0
         initial_serial_objs = self.snapshot_serial_objs()
         changed_serial_objs = []
@@ -67,8 +107,8 @@ class SerialSentry:
                 else:
                     curr_serial_obj = SnapshotSerialObj(None)
                 
-                print("Initial Comport: {}".format(initial_serial_obj))
-                print("Current Comport: {}".format(curr_serial_obj))
+                print(f"Initial Comport: {initial_serial_obj}")
+                print(f"Current Comport: {curr_serial_obj}")
                 
                 if initial_serial_obj != curr_serial_obj:
                     serial_obj_report = ChangedSerialObj(
@@ -91,18 +131,46 @@ class SerialSentry:
         self.changed_serial_objs = changed_serial_objs
     
     def monitor_serial_objs(self, time: int) -> None:
+        """
+        Monitor serial connections for changes over a given time period.
+
+        Args:
+            time (int): Time period to monitor in seconds.
+        """
         monitor = Thread(target=self.monitor_serial_objs_thread, args=[time])
         monitor.start()
 
     def get_changed_serial_objs(self) -> List[ChangedSerialObj]:
+        """
+        Get the list of changed serial objects.
+
+        Returns:
+            List[ChangedSerialObj]: List of changed serial objects.
+        """
         return self.changed_serial_objs
+    
+    def pretty_print(self, indent=0):
+        """
+        Return a formatted string representation of the preset data.
+
+        Args:
+            indent (int): Indentation level for formatting.
+
+        Returns:
+            str: Formatted string representation of the preset data.
+        """
+        spaces = "  " * (1 + indent)
+        return (
+            "Serial Sentry {\n" +
+            f"{spaces}Serial Objects: \n{"\n".join(serial_obj.pretty_print(1) for serial_obj in self.serial_objs.values())}\n" +
+            "}"
+        )
         
     def __str__(self):
-        return (
-            "Serial Sentry:{" +
-            "\n{}".format(self.serial_objs) +
-            "\n}"
-        )
+        """
+        Return a string representation of the preset configuration.
+        """
+        return self.pretty_print()
     
     def __repr__(self):
         return self.__str__()
