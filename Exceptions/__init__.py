@@ -7,5 +7,6 @@ from .missing_data_error import MissingDataError
 from .parser_error import ParserError
 from .sdec_error import SDECError
 from .serial_error import SerialError
+from .unknown_id_error import UnknownIdError
 
-__all__ = ["ComportError", "InvalidDataError", "MissingDataError", "ParserError", "SDECError", "SerialError"]
+__all__ = ["ComportError", "InvalidDataError", "MissingDataError", "ParserError", "SDECError", "SerialError", "UnknownIdError"]

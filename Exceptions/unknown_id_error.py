@@ -1,7 +1,7 @@
 from .sdec_error import SDECError
 
-class InvalidDataError(SDECError):
-    """Exception raised when required data is invalid."""
+class UnknownIdError(SDECError):
+    """Exception raised when an unknown Hardware/Firmware ID is used."""
     
     def __init__(self, message):
         self.message = message

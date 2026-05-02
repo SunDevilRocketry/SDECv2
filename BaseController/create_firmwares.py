@@ -2,6 +2,7 @@
 # Copyright (c) 2025 Sun Devil Rocketry
 
 from .firmware import Firmware
+from SDECv2.Exceptions import UnknownIdError
 
 def create_firmware(firmware_id) -> Firmware:
     """
@@ -10,10 +11,10 @@ def create_firmware(firmware_id) -> Firmware:
     Returns:
         Firmware for the given ID.
     """
-    if( firmware_id == b'\x06' ):
-        return appa_firmware()
-    elif( firmware_id == b'\x11' ):
-        return receiver_firmware()
+    match firmware_id:
+        case b"\x06": return appa_firmware()
+        case b"\x11": return receiver_firmware()
+        case _: raise UnknownIdError(f"Unknown Firmware ID {firmware_id}")
 
 def appa_firmware() -> Firmware:
     """

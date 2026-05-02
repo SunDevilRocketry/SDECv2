@@ -4,6 +4,7 @@
 from .controller import Controller
 from .base_sensor import BaseSensor
 from SDECv2.Sensor import create_sensors
+from SDECv2.Exceptions import UnknownIdError
 
 def create_controller(hardware_id) -> Controller:
     """
@@ -12,10 +13,10 @@ def create_controller(hardware_id) -> Controller:
     Returns:
         Controller: for the given ID.
     """
-    if( hardware_id == b'\x05' ):
-        return flight_computer_rev2_controller()
-    elif( hardware_id == b'\x10' ):
-        return ground_station_rev1_controller()
+    match hardware_id:
+        case b"\x05": return flight_computer_rev2_controller()
+        case b"\x10": return ground_station_rev1_controller()
+        case _: raise UnknownIdError(f"Unknown Hardware ID {hardware_id}")
 
 def flight_computer_rev2_controller() -> Controller:
     """
