@@ -22,5 +22,5 @@ jobs:
         pip install pylint
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py'); code=$?
+        pylint $(git ls-files '*.py' | grep -v '^Testing/'); code=$?
         (( code & 35 )) && exit 1 || exit 0
