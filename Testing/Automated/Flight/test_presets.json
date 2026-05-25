@@ -26,7 +26,7 @@
             "Name": "LD timeout",
             "Size": 2,
             "Data Type": "int",
-            "Value": 7000
+            "Value": 30000
         },
         {
             "Name": "LD baro threshold",

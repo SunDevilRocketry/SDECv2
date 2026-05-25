@@ -27,7 +27,9 @@ class Tester:
         if len(self.__results) == 0:
             return # do nothing
         # construct path
-        file_name = os.path.join(test_dir, INTERMEDIATE_RESULTS_DIR, results_name)
+        results_dir = os.path.join(test_dir, INTERMEDIATE_RESULTS_DIR)
+        os.makedirs(results_dir, exist_ok=True)
+        file_name = os.path.join(results_dir, results_name)
         with open(file_name, "w") as f:
             for line in self.__results:
                 f.write(str(line[0]) + line[1] + "\n")

@@ -4,3 +4,5 @@
 a_output
 a_input
 SDECv2.egg-info
+**/intermediate_results/*
+**/temp/*
