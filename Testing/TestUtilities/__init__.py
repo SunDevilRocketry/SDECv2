@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
-from SerialController import *
-from BaseController import *
+from .tester import Tester
+
+__all__ = ["Tester"]

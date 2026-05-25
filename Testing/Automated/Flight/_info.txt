@@ -1,0 +1,9 @@
+These scripts are used in the execution of integration tests on the SDR flight computer.
+
+This particular integration test uses the emulator to perform an automated check of the most
+critical features between SDEC and the FC.
+
+Each of these three scripts are executed in sequence (setup -> execute -> verify), with the emulator
+re-running for each phase but with the environment (flash/nonvol) preserved between each script.
+
+For more information, go to SunDevilRocketry/Flight-Computer-Firmware/test/app/rev2/flight_int.

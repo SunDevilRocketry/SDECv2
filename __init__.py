@@ -6,3 +6,4 @@ from .BaseController import BaseController, BaseSensor, Controller, Firmware, cr
 from .Parser import Parser, PresetConfig, PresetData, Feature, FeatureBitmask, DataBitmask, Data, Telemetry, create_configs
 from .Sensor import Sensor, SensorSentry, create_sensors, util, conv_functions
 from .SerialController import SerialObj, SerialSentry, Comport
+from .Exceptions import *
