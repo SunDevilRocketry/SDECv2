@@ -36,6 +36,5 @@ except Exception as e:
     traceback.print_exc()
     tester.assert_result(False, "A fatal error occurred during execution. See the log for more details.")
 finally:
-    print("Setup phase complete.")
     script_dir = Path(__file__).parent.resolve()
     tester.write_results(str(script_dir), "setup.results")
