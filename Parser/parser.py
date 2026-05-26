@@ -521,13 +521,18 @@ class Parser:
         flash_bytes = bytearray()
         for i in range(num_frames):
             if (i % 100 == 0): print(f"Reading block (size 512) {i} ...")
-            chunk = serial_connection.read(num_bytes=512)
             
-            num_received = len(chunk)
-            if num_received == 0: 
-                print(f"[{i + 1}/{num_frames}] Timeout: Flash is empty")
-            elif num_received != 512:
-                print(f"[{i + 1}/{num_frames}] Timeout: Partial read of length {num_received}")
+            chunk = bytearray()
+            while len(chunk) < 512:
+                remaining = 512 - len(chunk)
+                piece = serial_connection.read(num_bytes=remaining)
+                if len(piece) == 0:
+                    print(f"[{i + 1}/{num_frames}] Timeout: Flash is empty")
+                    break
+                chunk.extend(piece)
+
+            if 0 < len(chunk) < 512:
+                print(f"[{i + 1}/{num_frames}] Reassembled partial read into full block")
 
             flash_bytes.extend(chunk)
 
