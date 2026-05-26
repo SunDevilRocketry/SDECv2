@@ -21,15 +21,18 @@ serial_connection = SerialObj()
 
 # connect
 try:
+    print("[verify] Connecting")
     serial_connection.init_comport(sdec_comport, 921600, 5)
     serial_connection.open_comport()
     serial_connection.connect()
 
     # assert proper connection
+    print("[verify] Asserting Connection Status")
     tester.assert_result(serial_connection.target.controller.id == b'\x05', "Check that connect completed successfully (HW Opcode).")
     tester.assert_result(serial_connection.target.firmware.id == b'\x06', "Check that connect completed successfully (FW Opcode).")
 
     # download the preset
+    print("[verify] Preset Download")
     tmp_dir = Path("Testing/Automated/Flight/temp")
     tmp_dir.mkdir(exist_ok=True)
     tmp_preset = tmp_dir / "tmp_preset.json"
@@ -46,11 +49,13 @@ try:
         oracle = json.load(file)
 
     # Check presets
+    print("[verify] Checking Presets")
     tester.assert_result(downloaded.get("Feature Bitmask") == oracle.get("Feature Bitmask"), "Feature Bitmasks Equivalent")
     tester.assert_result(downloaded.get("Data Bitmask") == oracle.get("Data Bitmask"), "Feature Bitmasks Equivalent")
     tester.assert_result(downloaded.get("Config Data") == oracle.get("Config Data"), "Config Data Equivalent")
     
     # Flash Extract
+    print("[verify] Flash Extract")
     extract_results = tmp_dir / "extract_results.json"
     extract_preset = tmp_dir / "extract_preset.json"
     appa_parser.flash_extract(serial_connection, preset_path=extract_preset.resolve(), data_path=extract_results.resolve())
@@ -65,6 +70,7 @@ try:
         flash_preset = json.load(f)
 
     # Verify extracted preset matches downloaded
+    print("[verify] Verifying extract")
     tester.assert_result(flash_preset == downloaded, "Flash extract data matches downloaded preset.")
 
     # Verify frame sizes match
@@ -73,6 +79,7 @@ try:
     tester.assert_result(flash_data[2][0] == '1', "Second save bit present in extracted data.")
 
     # Finish test
+    print("[verify] Finalizing Test")
     time.sleep(1)
 except Exception as e:
     print("A fatal error occurred during the test.")
