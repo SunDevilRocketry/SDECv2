@@ -16,10 +16,12 @@ sdec_comport = os.environ.get("SDEC_COMPORT")
 # set up results asserter
 tester = Tester()
 
+# Set serial object
+serial_connection = SerialObj()
+
 # connect
 try:
-    serial_connection = SerialObj()
-    serial_connection.init_comport(sdec_comport, 921600, 3)
+    serial_connection.init_comport(sdec_comport, 921600, 5)
     serial_connection.open_comport()
     serial_connection.connect()
 
@@ -77,6 +79,12 @@ except Exception as e:
     print(e)
     traceback.print_exc()
     tester.assert_result(False, "A fatal error occurred during execution. See the log for more details.")
+except KeyboardInterrupt as e:
+    pass
 finally:
+    try:
+        serial_connection.close_comport()
+    except Exception:
+        pass
     script_dir = Path(__file__).parent.resolve()
     tester.write_results(str(script_dir), "verify.results")
