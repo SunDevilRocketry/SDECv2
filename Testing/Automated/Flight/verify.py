@@ -5,16 +5,22 @@ from pathlib import Path
 import json
 import csv
 
+print("[verify] Common imports done")
+
 from BaseController import Firmware, BaseController
 from BaseController import create_controllers
 from Parser import Parser, PresetConfig, DataBitmask, FeatureBitmask, create_configs
 from SerialController import SerialSentry, SerialObj, Comport
 from Testing import Tester
 
+print("[verify] SDEC imports done")
+
 sdec_comport = os.environ.get("SDEC_COMPORT")
 
 # set up results asserter
 tester = Tester()
+
+print("[verify] Opening SerialObj")
 
 # Set serial object
 serial_connection = SerialObj()
