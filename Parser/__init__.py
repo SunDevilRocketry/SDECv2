@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright (c) 2025 Sun Devil Rocketry
 
-import _import_path  # noqa: F401 — must run before SDECv2.* imports
+import _import_path  # must run before SDECv2.* imports
 
 from .data import Data
 from .bitmask import FeatureBitmask, DataBitmask
