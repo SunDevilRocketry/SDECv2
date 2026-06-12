@@ -36,7 +36,7 @@ def flight_computer_rev2_sensors() -> List[Sensor]:
         (b"\x12", "velo_z", "Velo Z", 4, float, "m/s", None),
 
         (b"\x13", "pos", "Position", 4, float, "m", None),
-        (b"\x14", "pres", "Barometric Pressure", 4, float, "kPa", baro_press),
+        (b"\x14", "pres", "Barometric Pressure", 4, float, "kPa", None),
         (b"\x15", "temp", "Barometric Temperature", 4, float, "C", None),
         (b"\x16", "alt", "Barometric Altitude", 4, float, "m", None),
         (b"\x17", "bvelo", "Barometric Velocity", 4, float, "m/s", None),
