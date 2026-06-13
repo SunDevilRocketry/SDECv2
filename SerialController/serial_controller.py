@@ -153,6 +153,18 @@ class SerialObj:
             self.serialObj.reset_input_buffer()
         except serial.SerialException as e:
             raise SerialError(e)
+        
+    def reset_output_buffer(self) -> None:
+        """
+        Reset the output buffer of the serial port.
+        
+        Returns:
+            None
+        """
+        try:
+            self.serialObj.reset_output_buffer()
+        except serial.SerialException as e:
+            raise SerialError(e)
 
     def pretty_print(self, indent=0):
         """
