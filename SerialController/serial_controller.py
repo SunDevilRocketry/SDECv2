@@ -20,15 +20,27 @@ class SerialObj:
         self.serialObj: serial.Serial = serial.Serial()
         self.target: BaseController | None = None
 
-    def available_comports(self) -> List[str]:
+    def available_comports(self) -> dict[str, str]:
         """
         Get a list of available COM ports.
 
         Returns:
-            List[str]: List of available COM port names.
+            dict[device: str, product: str]: List of available COM ports.
         """
+        port_dict = {}
         ports = serial.tools.list_ports.comports()
-        return [port.device for port in ports]
+        
+        for port in ports:
+            name = port.product or port.description or "Unknown Device"
+            port_dict[port.device] = name.replace(f" ({port.device})", "")
+
+        return port_dict
+    
+    def get_port_name(self) -> str:
+        """
+        Get the name of this serial port. Returns empty string if none active.
+        """
+        return self.serialObj.port
     
     def init_comport(self, name: str, baudrate: int, timeout: int) -> Comport:
         """
