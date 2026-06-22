@@ -76,7 +76,7 @@ class DashboardDumpType:
     alt: float
     long: float
     lat: float
-    acc_x: float
+    acc_z: float
     roll_rate: float
 
     @classmethod
