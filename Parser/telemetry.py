@@ -25,7 +25,7 @@ LORA_INTERNAL_HEADER_SIZE = 8
 LORA_PAYLOAD_SIZE = 40
 LORA_MESSAGE_SIZE = LORA_INTERNAL_HEADER_SIZE + LORA_PAYLOAD_SIZE
 FLIGHT_ID_SIZE = 16
-DASHBOARD_DUMP_TYPE_SIZE = 72
+DASHBOARD_DUMP_TYPE_SIZE = 36
 
 class LoRaMessageTypes(enum.IntEnum):
     """LORA_MESSAGE_TYPES (uint32 on wire)."""
@@ -81,7 +81,7 @@ class DashboardDumpType:
 
     @classmethod
     def parse(cls, data: bytes) -> DashboardDumpType:
-        if len(data) < DASHBOARD_DUMP_TYPE_SIZE:
+        if len(data) != DASHBOARD_DUMP_TYPE_SIZE:
             raise ParserError(
                 f"DashboardDumpType.parse expects {DASHBOARD_DUMP_TYPE_SIZE} bytes, got {len(data)}"
             )
