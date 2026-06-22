@@ -21,8 +21,8 @@ from threading import Lock
 from typing import Any
 
 UID_SIZE = 12
-LORA_INTERNAL_HEADER_SIZE = 20
-LORA_PAYLOAD_SIZE = 76
+LORA_INTERNAL_HEADER_SIZE = 8
+LORA_PAYLOAD_SIZE = 40
 LORA_MESSAGE_SIZE = LORA_INTERNAL_HEADER_SIZE + LORA_PAYLOAD_SIZE
 FLIGHT_ID_SIZE = 16
 DASHBOARD_DUMP_TYPE_SIZE = 72
@@ -38,11 +38,10 @@ class LoRaMessageTypes(enum.IntEnum):
 
 @dataclass(frozen=True)
 class LoRaInternalHeaderType:
-    """LORA_INTERNAL_HEADER_TYPE — uid, mid, timestamp (packed, 20 bytes)."""
+    """LORA_INTERNAL_HEADER_TYPE — mid, timestamp (packed, 8 bytes)."""
 
-    STRUCT: ClassVar[str] = f"<{UID_SIZE}sII"
+    STRUCT: ClassVar[str] = f"<II"
 
-    uid: bytes
     mid: int
     timestamp: int
 
@@ -60,34 +59,25 @@ class LoRaInternalHeaderType:
                 f"LoRaInternalHeaderType.parse expects {LORA_INTERNAL_HEADER_SIZE} bytes, "
                 f"got {len(data)}"
             )
-        uid, mid_u32, ts = struct.unpack(cls.STRUCT, data[:LORA_INTERNAL_HEADER_SIZE])
-        return cls(bytes(uid), mid_u32, ts)
+        mid_u32, ts = struct.unpack(cls.STRUCT, data[:LORA_INTERNAL_HEADER_SIZE])
+        return cls(mid_u32, ts)
 
 
 @dataclass(frozen=True)
 class DashboardDumpType:
-    """DASHBOARD_DUMP_TYPE — 18 × float32, 72 bytes."""
+    """DASHBOARD_DUMP_TYPE — 9 × float32, 36 bytes."""
 
-    STRUCT: ClassVar[str] = "<18f"
+    STRUCT: ClassVar[str] = "<9f"
 
-    accXconv: float
-    accYconv: float
-    accZconv: float
-    gyroXconv: float
-    gyroYconv: float
-    gyroZconv: float
-    rollDeg: float
-    pitchDeg: float
-    yawDeg: float
-    rollRate: float
-    pitchRate: float
-    yawRate: float
-    pres: float
-    temp: float
+    quat_w: float
+    quat_x: float
+    quat_y: float
+    quat_z: float
     alt: float
-    bvelo: float
     long: float
     lat: float
+    acc_x: float
+    roll_rate: float
 
     @classmethod
     def parse(cls, data: bytes) -> DashboardDumpType:
@@ -114,8 +104,9 @@ class DashboardDumpType:
 class LoRaMsgVehicleIdType:
     """LORA_MSG_VEHICLE_ID_TYPE — trailing explicit padding on the wire is discarded."""
 
-    STRUCT: ClassVar[str] = "<BBI16s"
+    STRUCT: ClassVar[str] = f"<{UID_SIZE}sBBI16s"
 
+    uid: bytes
     hw_opcode: int
     fw_opcode: int
     version: int
@@ -127,9 +118,9 @@ class LoRaMsgVehicleIdType:
             raise ParserError(
                 f"LoRaMsgVehicleIdType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
-        hw, fw, ver, fid = struct.unpack(cls.STRUCT, data[: 6 + FLIGHT_ID_SIZE])
+        uid, hw, fw, ver, fid = struct.unpack(cls.STRUCT, data[: 18 + FLIGHT_ID_SIZE])
         flight_id = fid.split(b"\x00", 1)[0].decode("utf-8", errors="replace")
-        return cls(hw, fw, ver, flight_id)
+        return cls(uid, hw, fw, ver, flight_id)
 
 
 @dataclass(frozen=True)
@@ -152,7 +143,7 @@ class LoRaMsgDashboardDumpType:
 
 @dataclass(frozen=True)
 class LoRaMsgTextMessageType:
-    """LORA_MSG_TEXT_MESSAGE_TYPE — TEXT_MESSAGE occupies the full 76-byte slot."""
+    """LORA_MSG_TEXT_MESSAGE_TYPE — TEXT_MESSAGE occupies the full 36-byte slot."""
 
     msg: str
 
