@@ -7,7 +7,6 @@ import serial
 
 from typing import List, Callable, Dict, Optional, Generator
 
-from .create_sensors import rev2_dashboard_dump_sensors
 from .sensor import Sensor
 from .util import bytes_to_float, bytes_to_int, process_data_bytes
 from SDECv2.SerialController import SerialObj
@@ -176,43 +175,6 @@ class SensorSentry:
             # Read and convert raw bytes to the readout
             sensor_data_bytes = data_bytes[sensor.offset:sensor.offset+sensor.size]
             converted_number = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
-            sensor_dump[sensor] = converted_number
-
-        return sensor_dump
-
-    @classmethod
-    def dashboard_dump(cls, serial_connection: SerialObj) -> Dict[Sensor, float | int | None]:
-        """
-        Dashboard dump opcode.
-
-        Args:
-            serial_connection (SerialObj): Serial connection to the Flight Computer.
-
-        Returns:
-            Dict[Sensor, float | int | None]: Sensor data.
-        """
-        # Dashboard dump opcode
-        serial_connection.send(b"\x30")
-
-        # Avoid creating a serial_sentry to reduce overhead
-        sensors = rev2_dashboard_dump_sensors()
-        sensors_size = sum(sensor.size for sensor in sensors)
-
-        data_bytes = serial_connection.read(sensors_size)
-
-        sensor_dump = {}
-        for sensor in sensors:
-            # Read and convert raw bytes to the readout
-            sensor_data_bytes = data_bytes[sensor.offset:sensor.offset+sensor.size]
-            converted_number = process_data_bytes(sensor_data_bytes, sensor.data_type, sensor.convert_data)
-            
-            # Convert Python inf and NaN into JSON readable values
-            if converted_number is not None:
-                if math.isinf(converted_number): 
-                    converted_number = 999999
-                elif math.isnan(converted_number):
-                    converted_number = None
-
             sensor_dump[sensor] = converted_number
 
         return sensor_dump
