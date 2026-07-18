@@ -12,6 +12,7 @@ from __future__ import annotations
 import enum
 import struct
 import math
+import time
 from dataclasses import dataclass, asdict
 from typing import ClassVar
 from SDECv2.SerialController import SerialObj
@@ -230,6 +231,22 @@ class Telemetry:
                 "status": "Connecting..."
                 }
         self.last_msg_time = None
+        self.msg_rx_callback = None
+
+    def __put_to_rx_callback(self, msg: dict[str, Any]):
+        if self.msg_rx_callback is None or type(self.msg_rx_callback) != callable[dict[str, Any]]:
+            return
+        self.msg_rx_callback(msg)
+
+    def register_rx_callback(self, msg_rx_callback: callable[str, float, dict[str, Any]]):
+        """
+        Register the receive callback for this telemetry object. 
+        The callback takes the following parameters and returns nothing:
+        - messageType (as a string)
+        - timestamp (as a float, timebase is seconds)
+        - message contents (json/dict)
+        """
+        self.msg_rx_callback = msg_rx_callback
 
     def dashboard_dump(self, serial_connection: SerialObj):
         """
@@ -241,12 +258,15 @@ class Telemetry:
         serial_connection.send(b'\x30')
         if( serial_connection.target == None ):
             print("Warning: The serial connection does not have an associated hardware/firmware platform. Report this.")
+            return
         elif( serial_connection.target.controller.id == b'\x05'):
             # Flight Computer: Parse dashboard dump
             data = serial_connection.read(DASHBOARD_DUMP_TYPE_SIZE)
             parsed = DashboardDumpType.parse(data)
             with( self.telem_lock ):
                 self.last_dashboard_dump = parsed
+            self.__put_to_rx_callback(self, LoRaMessageTypes.DASHBOARD_DATA.name, time.time(), parsed.to_json())
+            return
         elif( serial_connection.target.controller.id == b'\x10'):
             # Ground station: Interpret message & save
             data = serial_connection.read(LORA_MESSAGE_SIZE)
@@ -264,6 +284,7 @@ class Telemetry:
                 # Update message
                 if( parsed.header.mid_enum == LoRaMessageTypes.DASHBOARD_DATA ):
                     self.last_dashboard_dump = parsed.dashboard_dump.data
+                    self.__put_to_rx_callback(self, parsed.header.mid_enum.name, parsed.header.timestamp / 1000.0, self.last_dashboard_dump.to_json())
                 elif( parsed.header.mid_enum == LoRaMessageTypes.VEHICLE_ID ):
                     hw = parsed.vehicle_id.hw_opcode.to_bytes(1)
                     fw = parsed.vehicle_id.fw_opcode.to_bytes(1)
@@ -275,10 +296,11 @@ class Telemetry:
                             "sig_strength": 0,
                             "status": "OK"
                         }
+                        self.__put_to_rx_callback(self, parsed.header.mid_enum.name, parsed.header.timestamp / 1000.0, self.last_wireless_stats)
                     except (ValueError, ParserError, TypeError, AttributeError) as e:
                         print("Malformed vehicle ID message received. Discarding.")
                         print(f"HW: {hw}; FW: {fw};")
-
+            return
     
     def get_latest_dashboard_dump(self) -> dict[str, Any] | None:
         with( self.telem_lock ):
