@@ -33,8 +33,7 @@ class LoRaMessageTypes(enum.IntEnum):
     NULL_MSG = 0x00000000
     VEHICLE_ID = 0x00000001
     DASHBOARD_DATA = 0x00000002
-    WARNING_MESSAGE = 0x00000003
-    INFO_MESSAGE = 0x00000004
+    CALIBRATION = 0x00000003
 
 
 @dataclass(frozen=True)
@@ -143,20 +142,56 @@ class LoRaMsgDashboardDumpType:
 
 
 @dataclass(frozen=True)
-class LoRaMsgTextMessageType:
-    """LORA_MSG_TEXT_MESSAGE_TYPE — TEXT_MESSAGE occupies the full 36-byte slot."""
+class LoRaMsgCalibrationType:
+    """LORA_MSG_CALIBRATION_TYPE — CALIBRATION occupies the full 40-byte slot."""
 
-    msg: str
+    STRUCT: ClassVar[str] = "<9f4i"
+
+    imu_offset: list[float]     #6f
+    baro_preset: list[float]    #2f
+    qfe_reference: list[float]  #1f
+    servo_preset: list[int]     #4i
 
     @classmethod
-    def parse(cls, data: bytes) -> LoRaMsgTextMessageType:
+    def parse(cls, data: bytes) -> LoRaMsgCalibrationType:
+        # Forward declare struct params with strong typing
+        imu_offset: list[float]
+        baro_preset: list[float]
+        qfe_reference: list[float]
+        servo_preset: list[int]
+
         if len(data) < LORA_PAYLOAD_SIZE:
             raise ParserError(
                 f"LoRaMsgTextMessageType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
-        raw = data[:LORA_PAYLOAD_SIZE]
-        msg = raw.decode("utf-8", errors="replace").rstrip("\x00")
-        return cls(msg)
+        try:
+            floats, ints = struct.unpack(cls.STRUCT, data)
+            imu_offset = floats[0:6]
+            baro_preset = floats[6:8]
+            qfe_reference = floats[8]
+            servo_preset = ints[0:3]
+        except ValueError as e:
+            raise ParserError(
+                f"LoRaMsgCalibrationType.parse failed due to missing/unexpected values"
+            )
+        return cls(
+            imu_offset,
+            baro_preset,
+            qfe_reference,
+            servo_preset
+            )
+    
+    def _validate_floats(self, value: float | Any) -> float | None | Any:
+        if isinstance(value, float):
+            if not math.isfinite(value):
+                return 0.0  # or 0.0 depending on your needs
+        return value
+    
+    def to_json(self) -> dict[str, Any]:
+        raw = asdict(self)
+        for k, v in raw.items():
+            raw[k] = self._validate_floats(v)
+        return raw
 
 
 @dataclass(frozen=True)
@@ -166,7 +201,8 @@ class LoRaMessage:
     header: LoRaInternalHeaderType
     vehicle_id: LoRaMsgVehicleIdType | None = None
     dashboard_dump: LoRaMsgDashboardDumpType | None = None
-    text_message: LoRaMsgTextMessageType | None = None
+    #text_message: LoRaMsgTextMessageType | None = None
+    calibration: LoRaMsgCalibrationType | None = None
     raw_payload: bytes | None = None
 
     @classmethod
@@ -181,7 +217,7 @@ class LoRaMessage:
 
         vehicle_id = None
         dashboard_dump = None
-        text_message = None
+        calibration = None
         raw_payload: bytes | None = None
 
         match header.mid_enum:
@@ -189,8 +225,8 @@ class LoRaMessage:
                 vehicle_id = LoRaMsgVehicleIdType.parse(payload)
             case LoRaMessageTypes.DASHBOARD_DATA:
                 dashboard_dump = LoRaMsgDashboardDumpType.parse(payload)
-            case LoRaMessageTypes.WARNING_MESSAGE | LoRaMessageTypes.INFO_MESSAGE:
-                text_message = LoRaMsgTextMessageType.parse(payload)
+            case LoRaMessageTypes.CALIBRATION:
+                calibration = LoRaMsgCalibrationType.parse(payload)
             case _:
                 raw_payload = bytes(payload)
 
@@ -198,9 +234,10 @@ class LoRaMessage:
             header,
             vehicle_id=vehicle_id,
             dashboard_dump=dashboard_dump,
-            text_message=text_message,
+            calibration=calibration,
             raw_payload=raw_payload,
         )
+
 
 class Telemetry:
     """
@@ -230,6 +267,7 @@ class Telemetry:
                 "sig_strength": 0,
                 "status": "Connecting..."
                 }
+        self.last_msg = LoRaMessage
         self.last_msg_time = None
         self.msg_rx_callback = None
 
@@ -300,6 +338,8 @@ class Telemetry:
                     except (ValueError, ParserError, TypeError, AttributeError) as e:
                         print("Malformed vehicle ID message received. Discarding.")
                         print(f"HW: {hw}; FW: {fw};")
+                elif( parsed.header.mid_enum == LoRaMessageTypes.CALIBRATION ):
+                    self.__put_to_rx_callback(parsed.header.mid_enum.name, parsed.header.timestamp / 1000.0, parsed.calibration.to_json() )
             return
     
     def get_latest_dashboard_dump(self) -> dict[str, Any] | None:
