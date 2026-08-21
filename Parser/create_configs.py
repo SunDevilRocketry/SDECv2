@@ -84,22 +84,18 @@ def appa_data_bitmask() -> DataBitmask:
             name="state_estim",
             value=Toggle.ENABLED,
             sensors=[
-                BaseSensor("rollDeg", "Roll Body Angle", 4, float, "deg"),
-                BaseSensor("pitchDeg", "Pitch Body Angle", 4, float, "deg"),
-                BaseSensor("yawDeg", "Yaw Body Angle", 4, float, "deg"),
-                BaseSensor("rollRate", "Roll Body Rate", 4, float, "deg/s"),
-                BaseSensor("pitchRate", "Pitch Body Rate", 4, float, "deg/s"),
-                BaseSensor("yawRate", "Yaw Body Rate", 4, float, "deg/s"),
+                BaseSensor("quat_w", "Unit Quaternion W", 4, float, ""),
+                BaseSensor("quat_x", "Unit Quaternion X", 4, float, ""),
+                BaseSensor("quat_y", "Unit Quaternion Y", 4, float, ""),
+                BaseSensor("quat_z", "Unit Quaternion Z", 4, float, ""),
+                BaseSensor("roll_rate", "Roll Body Rate", 4, float, "deg/s"),
                 
                 BaseSensor("velo", "Velocity", 4, float, "m/s"),
                 BaseSensor("velo_x", "Velo X", 4, float, "m/s"),
                 BaseSensor("velo_y", "Velo Y", 4, float, "m/s"),
                 BaseSensor("velo_z", "Velo Z", 4, float, "m/s"),
-                
-                BaseSensor("pos", "Position", 4, float, "m"),
 
                 BaseSensor("alt", "Barometric Altitude", 4, float, "m"),
-                BaseSensor("bvelo", "Barometric Velocity", 4, float, "m/s")
             ]
         ),
         Data(
