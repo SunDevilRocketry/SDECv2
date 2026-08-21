@@ -145,11 +145,11 @@ class LoRaMsgDashboardDumpType:
 class LoRaMsgCalibrationType:
     """LORA_MSG_CALIBRATION_TYPE — CALIBRATION occupies the full 40-byte slot."""
 
-    STRUCT: ClassVar[str] = "<9f4i"
+    STRUCT: ClassVar[str] = "<9f4B"
 
     imu_offset: list[float]     #6f
     baro_preset: list[float]    #2f
-    qfe_reference: list[float]  #1f
+    qfe_reference: float        #1f
     servo_preset: list[int]     #4i
 
     @classmethod
@@ -157,7 +157,7 @@ class LoRaMsgCalibrationType:
         # Forward declare struct params with strong typing
         imu_offset: list[float]
         baro_preset: list[float]
-        qfe_reference: list[float]
+        qfe_reference: float
         servo_preset: list[int]
 
         if len(data) < LORA_PAYLOAD_SIZE:
@@ -165,11 +165,11 @@ class LoRaMsgCalibrationType:
                 f"LoRaMsgTextMessageType.parse expects {LORA_PAYLOAD_SIZE} bytes, got {len(data)}"
             )
         try:
-            floats, ints = struct.unpack(cls.STRUCT, data)
-            imu_offset = floats[0:6]
-            baro_preset = floats[6:8]
-            qfe_reference = floats[8]
-            servo_preset = ints[0:3]
+            unpacked = struct.unpack(cls.STRUCT, data)
+            imu_offset = unpacked[0:6]
+            baro_preset = unpacked[6:8]
+            qfe_reference = unpacked[8]
+            servo_preset = unpacked[0:4]
         except ValueError as e:
             raise ParserError(
                 f"LoRaMsgCalibrationType.parse failed due to missing/unexpected values"
