@@ -169,7 +169,7 @@ class LoRaMsgCalibrationType:
             imu_offset = unpacked[0:6]
             baro_preset = unpacked[6:8]
             qfe_reference = unpacked[8]
-            servo_preset = unpacked[0:4]
+            servo_preset = unpacked[9:13]
         except ValueError as e:
             raise ParserError(
                 f"LoRaMsgCalibrationType.parse failed due to missing/unexpected values"
