@@ -9,6 +9,37 @@ Conversion functions are created here then referenced when creating a sensor obj
 import math
 
 
+ISA_PRESSURE_SEA_LEVEL = 101325.0  # Pa
+ISA_EXP = 0.190294958
+ISA_TEMP_LAPSE_RATE = 0.0065  # K/m
+ISA_TROPOPAUSE_PRES = 22632.06  # Pa
+ISA_TROPOPAUSE_ALT = 11000.0  # m
+ISA_STRATO_SCALE_H = 6341.62  # m
+KELVIN_OFFSET = 273.15
+
+
+def isa_get_altitude_qnh(baro_pres: float, baro_temp: float) -> float:
+	"""Calculate ISA altitude above sea level from pressure (Pa) and temperature (°C).
+
+	This mirrors the flight computer's QNH calculation, including its
+	troposphere/stratosphere branch at the tropopause pressure. A non-positive
+	pressure returns ``math.inf`` to match the firmware's ``INFINITY`` result.
+	"""
+	if baro_pres <= 0.0:
+		return math.inf
+
+	if baro_pres < ISA_TROPOPAUSE_PRES:
+		return ISA_TROPOPAUSE_ALT + ISA_STRATO_SCALE_H * math.log(
+			ISA_TROPOPAUSE_PRES / baro_pres
+		)
+
+	return (
+		(math.pow(ISA_PRESSURE_SEA_LEVEL / baro_pres, ISA_EXP) - 1.0)
+		* (baro_temp + KELVIN_OFFSET)
+		/ ISA_TEMP_LAPSE_RATE
+	)
+
+
 def eul_to_quat(yaw: float, pitch: float, roll: float) -> tuple[float, float, float, float]:
 	"""Convert ZYX Euler angles in radians to a ``(w, x, y, z)`` quaternion.
 
