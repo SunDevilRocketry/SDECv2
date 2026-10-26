@@ -16,28 +16,39 @@ ISA_TROPOPAUSE_PRES = 22632.06  # Pa
 ISA_TROPOPAUSE_ALT = 11000.0  # m
 ISA_STRATO_SCALE_H = 6341.62  # m
 KELVIN_OFFSET = 273.15
+ISA_TEMP_SEA_LEVEL = KELVIN_OFFSET + 15
 
 
-def isa_get_altitude_qnh(baro_pres: float, baro_temp: float) -> float:
-	"""Calculate ISA altitude above sea level from pressure (Pa) and temperature (°C).
+def isa_get_altitude_qnh(baro_pres: float, baro_temp: float | None) -> float:
+    """Calculate ISA altitude above sea level from pressure (Pa) and temperature (°C).
 
-	This mirrors the flight computer's QNH calculation, including its
-	troposphere/stratosphere branch at the tropopause pressure. A non-positive
-	pressure returns ``math.inf`` to match the firmware's ``INFINITY`` result.
-	"""
-	if baro_pres <= 0.0:
-		return math.inf
+    This mirrors the flight computer's QNH calculation, including its
+    troposphere/stratosphere branch at the tropopause pressure. A non-positive
+    pressure returns ``math.inf`` to match the firmware's ``INFINITY`` result.
+    If no temperature is available, the ISA standard temperature at the
+    corresponding altitude is used.
+    """
+    if baro_pres <= 0.0:
+        return math.inf
 
-	if baro_pres < ISA_TROPOPAUSE_PRES:
-		return ISA_TROPOPAUSE_ALT + ISA_STRATO_SCALE_H * math.log(
-			ISA_TROPOPAUSE_PRES / baro_pres
-		)
+    if baro_pres < ISA_TROPOPAUSE_PRES:
+        return ISA_TROPOPAUSE_ALT + ISA_STRATO_SCALE_H * math.log(
+            ISA_TROPOPAUSE_PRES / baro_pres
+        )
 
-	return (
-		(math.pow(ISA_PRESSURE_SEA_LEVEL / baro_pres, ISA_EXP) - 1.0)
-		* (baro_temp + KELVIN_OFFSET)
-		/ ISA_TEMP_LAPSE_RATE
-	)
+    if baro_temp is None:
+        # Standard temperature (K) at the altitude implied by this pressure
+        baro_temp_k = ISA_TEMP_SEA_LEVEL * math.pow(
+            baro_pres / ISA_PRESSURE_SEA_LEVEL, ISA_EXP
+        )
+    else:
+        baro_temp_k = baro_temp + KELVIN_OFFSET
+
+    return (
+        (math.pow(ISA_PRESSURE_SEA_LEVEL / baro_pres, ISA_EXP) - 1.0)
+        * baro_temp_k
+        / ISA_TEMP_LAPSE_RATE
+    )
 
 
 def mach_number(velocity_m_s: float, altitude_m: float) -> float:
