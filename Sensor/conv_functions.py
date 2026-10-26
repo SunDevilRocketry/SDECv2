@@ -40,6 +40,21 @@ def isa_get_altitude_qnh(baro_pres: float, baro_temp: float) -> float:
 	)
 
 
+def mach_number(velocity_m_s: float, altitude_m: float) -> float:
+	"""Calculate Mach number from velocity (m/s) and altitude above sea level (m).
+
+	The local speed of sound uses the ISA tropospheric temperature lapse rate,
+	with temperature held at the tropopause value above 11 km. Velocity may be
+	signed; Mach number is returned as a non-negative magnitude.
+	"""
+	if not math.isfinite(velocity_m_s) or not math.isfinite(altitude_m):
+		raise ValueError("Velocity and altitude must be finite values")
+
+	temperature_k = max(216.65, ( KELVIN_OFFSET + 15.0 ) - ISA_TEMP_LAPSE_RATE * altitude_m)
+	speed_of_sound = math.sqrt(1.4 * 287.05 * temperature_k)
+	return abs(velocity_m_s) / speed_of_sound
+
+
 def eul_to_quat(yaw: float, pitch: float, roll: float) -> tuple[float, float, float, float]:
 	"""Convert ZYX Euler angles in radians to a ``(w, x, y, z)`` quaternion.
 
